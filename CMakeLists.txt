@@ -36,16 +36,18 @@ SOURCE_GROUP (samplers REGULAR_EXPRESSION src/samplers/.*)
 SOURCE_GROUP (shapes REGULAR_EXPRESSION src/shapes/.*)
 
 add_library(porte STATIC
-	${PROTE_SOURCE}
+	${PORTE_SOURCE}
 )
 
 set (ALL_PORTE_LIBS
 	porte
 )
 
+add_subdirectory(ext)
+
 add_executable(porte_exe src/main/main.cpp)
 
-set_target_properties(porte_exe proterties OUTPUT_NAME porte)
+set_target_properties(porte_exe PROPERTIES OUTPUT_NAME porte)
 target_link_libraries(porte_exe ${ALL_PORTE_LIBS})
 
 # VS的版本号
