@@ -16,10 +16,6 @@ namespace porte
 	class Primitive;
 	class Light;
 
-	void CreatePPMImage(std::shared_ptr<Image> pImage);
-
-	void CreatePPMImage(const Vector2i& res, float* rgb);
-
 	class Scene
 	{
 		// 不需要add函数因为这本身就是一个public的结构
