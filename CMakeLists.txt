@@ -14,6 +14,8 @@ include_directories(src)
 include_directories(ext/drjit/include)
 include_directories(ext/drjit/ext/drjit-core/include)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 FILE (GLOB PORTE_SOURCE
 	src/core/*
 	src/accelerators/*
@@ -152,10 +154,6 @@ MESSAGE(STATUS "BROLAND:					" ${BORLAND})
 # Microsoft compiler 
 MESSAGE(STATUS "MSVC:						" ${MSVC})
 MESSAGE(STATUS "MSVC_IDE:					" ${MSVC_IDE})
-MESSAGE(STATUS "MSVC60:						" ${MSVC60})
-MESSAGE(STATUS "MSVC70:						" ${MSVC70})
-MESSAGE(STATUS "MSVC71:						" ${MSVC71})
-MESSAGE(STATUS "MSVC80:						" ${MSVC80})
 MESSAGE(STATUS "MSVC_TOOLSET_VERSION:				" ${MSVC_TOOLSET_VERSION})
 MESSAGE(STATUS "CMAKE_COMPILER_2005:		" ${CMAKE_COMPILER_2005})
 
