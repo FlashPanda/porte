@@ -2,11 +2,9 @@
 
 #include <string>
 #include <map>
-#include "tiny_obj_loader.h"
-#include "SceneObjectMesh.h"
-#include "SceneNodeMesh.h"
+#include <tinyobjloader/tiny_obj_loader.h>
 
-namespace panda
+namespace porte
 {
-	bool ObjLoader(std::string file, std::shared_ptr<SceneObjectMesh>& pMesh, std::shared_ptr<SceneNodeMesh>& pNodeMesh);
+	bool ObjLoader(std::string fil);
 }

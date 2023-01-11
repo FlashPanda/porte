@@ -3,10 +3,10 @@
 #include <sstream>
 #include "RNG.h"
 
-namespace panda
+namespace porte
 {
-	Vector3Df BxDF::Sample_f(const Vector3Df& wo, Vector3Df* wi,
-		const Vector2Df& u, float* pdf,
+	Vector3f BxDF::Sample_f(const Vector3f& wo, Vector3f* wi,
+		const Vector2f& u, float* pdf,
 		BxDFType* sampledType) const
 	{
 		// cos半球采样，必要的话翻转方向
@@ -17,20 +17,20 @@ namespace panda
 	}
 
 	// 这个计算是因为cosine sample hemisphere采样才这么算的。
-	float BxDF::Pdf(const Vector3Df& wo, const Vector3Df& wi) const
+	float BxDF::Pdf(const Vector3f& wo, const Vector3f& wi) const
 	{
 		// 保证wo和wi是在相同的半球
 		return wo[2] * wi[2] > 0? AbsCosTheta(wi) * INV_PI : 0;
 	}
 
-	Vector3Df BSDF::f(const Vector3Df& woW, const Vector3Df& wiW,
+	Vector3f BSDF::f(const Vector3f& woW, const Vector3f& wiW,
 		BxDFType flags) const
 	{
-		Vector3Df wi = WorldToLocal(wiW), wo = WorldToLocal(woW);
+		Vector3f wi = WorldToLocal(wiW), wo = WorldToLocal(woW);
 		if (wo[2] == 0) return 0.f;
 
 		bool reflect = DotProduct(wiW, ng) * DotProduct(woW, ng) > 0;
-		Vector3Df f(0.f);
+		Vector3f f(0.f);
 
 		for (int32 i = 0; i < nBxDFs; ++i)
 			if (bxdfs[i]->MatchesFlags(flags) && 
@@ -40,7 +40,7 @@ namespace panda
 		return f;
 	}
 
-	Vector3Df BSDF::Sample_f(const Vector3Df& woWorld, Vector3Df* wiWorld, const Vector2Df& u,
+	Vector3f BSDF::Sample_f(const Vector3f& woWorld, Vector3f* wiWorld, const Vector2f& u,
 		float* pdf, BxDFType type,
 		BxDFType* sampledType) const
 	{
@@ -50,7 +50,7 @@ namespace panda
 		{
 			*pdf = 0;
 			if (sampledType) *sampledType = BxDFType(0);
-			return Vector3Df(0.f);
+			return Vector3f(0.f);
 		}
 
 		int32 comp = std::min((int32)std::floor(u[0] * matchingComps), matchingComps - 1);
@@ -67,14 +67,14 @@ namespace panda
 		assert(bxdf != nullptr);
 
 		// 把样本u重新映射到$[0,1)^2$
-		Vector2Df uRemapped(std::min(u[0] * matchingComps - comp, OneMinusEpsilon),
+		Vector2f uRemapped(std::min(u[0] * matchingComps - comp, OneMinusEpsilon),
 			u[1]);
-		Vector3Df wi, wo = WorldToLocal(woWorld);
+		Vector3f wi, wo = WorldToLocal(woWorld);
 		if (wo[2] == 0) return 0.f;
 		*pdf = 0;
 		if (sampledType) *sampledType = bxdf->mType;
 		// 这一波采样其实核心目的是采一个方向。pdf以及f在之后都会再算一遍。
-		Vector3Df f = bxdf->Sample_f(wo, &wi, uRemapped, pdf, sampledType);
+		Vector3f f = bxdf->Sample_f(wo, &wi, uRemapped, pdf, sampledType);
 		if (*pdf == 0)
 		{
 			if (sampledType) *sampledType = BxDFType(0);
@@ -116,11 +116,11 @@ namespace panda
 		return num;
 	}
 
-	float BSDF::Pdf(const Vector3Df& woWorld, const Vector3Df& wiWorld,
+	float BSDF::Pdf(const Vector3f& woWorld, const Vector3f& wiWorld,
 		BxDFType flags) const
 	{
 		if(nBxDFs == 0) return 0.f;
-		Vector3Df wo = WorldToLocal(woWorld), wi = WorldToLocal(wiWorld);
+		Vector3f wo = WorldToLocal(woWorld), wi = WorldToLocal(wiWorld);
 		if (wo[2] == 0.f) return 0.f;
 		float pdf = 0.f;
 		int32 matchingComps = 0;

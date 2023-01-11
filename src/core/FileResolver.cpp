@@ -2,7 +2,7 @@
 #include <sstream>
 #include <algorithm>
 
-namespace panda
+namespace porte
 {
 	FileResolver::FileResolver()
 	{

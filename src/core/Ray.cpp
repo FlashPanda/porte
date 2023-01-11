@@ -1,6 +1,6 @@
 #include "Ray.h"
 
-namespace panda
+namespace porte
 {
 	std::ostream& operator<<(std::ostream& os, const Ray& r)
 	{

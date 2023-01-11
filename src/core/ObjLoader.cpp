@@ -1,7 +1,7 @@
 #include "ObjLoader.h"
 #include <vector>
 
-namespace panda
+namespace porte
 {
 	bool ObjLoader(std::string file, std::shared_ptr<SceneObjectMesh>& pMesh, std::shared_ptr<SceneNodeMesh>& pNodeMesh)
 	{
@@ -55,29 +55,29 @@ namespace panda
 		//	}
 
 		std::string meshName;
-		std::vector<Vector3Df> vertices;
-		std::vector<Vector3Df> normals;
+		std::vector<Vector3f> vertices;
+		std::vector<Vector3f> normals;
 		std::vector<uint32> indices;
-		std::vector<Vector2Df> uvs;
+		std::vector<Vector2f> uvs;
 		for (const tinyobj::shape_t& shape : shapes)
 		{
 			meshName = shape.name;
 
 			for (const tinyobj::index_t& index : shape.mesh.indices)
 			{
-				Vector3Df vertex;
+				Vector3f vertex;
 				vertex[0] = attrib.vertices[3 * index.vertex_index + 0];
 				vertex[1] = attrib.vertices[3 * index.vertex_index + 1];
 				vertex[2] = attrib.vertices[3 * index.vertex_index + 2];
 
-				Vector3Df normal;
+				Vector3f normal;
 				normal[0] = attrib.normals[3 * index.normal_index + 0];
 				normal[1] = attrib.normals[3 * index.normal_index + 1];
 				normal[2] = attrib.normals[3 * index.normal_index + 2];
 
 				if (index.texcoord_index != -1)
 				{
-					Vector2Df uv;
+					Vector2f uv;
 					uv[0] = attrib.texcoords[2 * index.texcoord_index + 0];
 					uv[1] = attrib.texcoords[2 * index.texcoord_index + 1];
 					uvs.push_back(uv);

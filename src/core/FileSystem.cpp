@@ -30,7 +30,7 @@
 #  define NSTR(str) str
 #endif
 
-namespace panda
+namespace porte
 {
 	inline StringType ToNative(const std::string& str) {
 #if defined(WIN32)

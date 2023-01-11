@@ -1,9 +1,8 @@
 #pragma once
-#include "Vector.hpp"
-#include "Matrix.hpp"
-#include "Interaction.h"
+#include <core/MathUtil.h>
+#include <core/Interaction.h>
 
-namespace panda
+namespace porte
 {
 	class Scene;
 	class Sampler;
@@ -32,7 +31,7 @@ namespace panda
 		const Interaction& P0() const { return p0; }
 		const Interaction& P1() const { return p1; }
 		bool Unoccluded(const Scene& scene) const;
-		Vector3Df Tr(const Scene& scene, Sampler& sampler) const;
+		Vector3f Tr(const Scene& scene, Sampler& sampler) const;
 
 	private:
 		Interaction p0, p1;
@@ -43,15 +42,15 @@ namespace panda
 	public:
 		virtual ~Light();
 		Light(int32 flags, const Matrix4f& LocalToWorld, int32 nSamples = 1);
-		virtual Vector3Df Sample_Li(const Interaction& ref, const Vector2Df& u,
-			Vector3Df* wi, float* pdf, VisibilityTester* vis) const = 0;
-		virtual Vector3Df Power() const = 0;
+		virtual Vector3f Sample_Li(const Interaction& ref, const Vector2f& u,
+			Vector3f* wi, float* pdf, VisibilityTester* vis) const = 0;
+		virtual Vector3f Power() const = 0;
 		virtual void Preprocess(const Scene& scene) {}
-		virtual Vector3Df Le(const Ray& r) const;
-		virtual float Pdf_Li(const Interaction& ref, const Vector3Df& wi) const = 0;
-		virtual Vector3Df Sample_Le(const Vector2Df& u1, const Vector2Df& u2, float time,
-			Ray* ray, Vector3Df* nLight, float* pdfPos, float* pdfDir) const = 0;
-		virtual void Pdf_Le(const Ray& ray, const Vector3Df& nLight, float* pdfPos, float* pdfDir) const = 0;
+		virtual Vector3f Le(const Ray& r) const;
+		virtual float Pdf_Li(const Interaction& ref, const Vector3f& wi) const = 0;
+		virtual Vector3f Sample_Le(const Vector2f& u1, const Vector2f& u2, float time,
+			Ray* ray, Vector3f* nLight, float* pdfPos, float* pdfDir) const = 0;
+		virtual void Pdf_Le(const Ray& ray, const Vector3f& nLight, float* pdfPos, float* pdfDir) const = 0;
 
 		const int32 flags;
 		const int32 nSamples;
@@ -63,20 +62,19 @@ namespace panda
 	class PointLight : public Light
 	{
 	public:
-		PointLight(const Matrix4f& LocalToWorld, const Vector3Df& I);
-		Vector3Df Sample_Li(const Interaction& ref, const Vector2Df& u, Vector3Df* wi,
+		PointLight(const Matrix4f& LocalToWorld, const Vector3f& I);
+		Vector3f Sample_Li(const Interaction& ref, const Vector2f& u, Vector3f* wi,
 			float* pdf, VisibilityTester* vis) const;
-		Vector3Df Power() const;
-		float Pdf_Li(const Interaction&, const Vector3Df&) const;
-		Vector3Df Sample_Le(const Vector2Df& u1, const Vector2Df& u2, float time, Ray* ray, Vector3Df* nLight,
+		Vector3f Power() const;
+		float Pdf_Li(const Interaction&, const Vector3f&) const;
+		Vector3f Sample_Le(const Vector2f& u1, const Vector2f& u2, float time, Ray* ray, Vector3f* nLight,
 			float* pdfPos, float* pdfDir) const;
-		void Pdf_Le(const Ray&, const Vector3Df&, float* pdfPos, float* pdfDir) const;
+		void Pdf_Le(const Ray&, const Vector3f&, float* pdfPos, float* pdfDir) const;
 
 	private:
-		const Vector3Df pLight;		// 位置
-		const Vector3Df I;	// 亮度
+		const Vector3f pLight;		// 位置
+		const Vector3f I;	// 亮度
 	};
 
-	std::shared_ptr<PointLight> CreatePointLight(const Matrix4f& local2world, const Vector3Df& color, 
-		float intensity);
+	std::shared_ptr<PointLight> CreatePointLight(const Matrix4f& local2world, const Vector3f& color, float intensity);
 }

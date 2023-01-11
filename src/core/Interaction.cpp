@@ -2,12 +2,12 @@
 #include "SceneNodeMesh.h"
 #include "Primitive.h"
 
-namespace panda
+namespace porte
 {
-	SurfaceInteraction::SurfaceInteraction(const Vector3Df& inP, const Vector3Df& inErr,
-		const Vector2Df& inUV, const Vector3Df& inWo,
-		const Vector3Df& dpdu, const Vector3Df& dpdv,
-		const Vector3Df& dndu, const Vector3Df& dndv,
+	SurfaceInteraction::SurfaceInteraction(const Vector3f& inP, const Vector3f& inErr,
+		const Vector2f& inUV, const Vector3f& inWo,
+		const Vector3f& dpdu, const Vector3f& dpdv,
+		const Vector3f& dndu, const Vector3f& dndv,
 		const Shape* inShape) 
 		: Interaction(p, Normalize(CrossProduct(dpdu, dpdv)), inErr, inWo), 
 		uv(inUV), 
@@ -24,8 +24,8 @@ namespace panda
 		primitive->ComputeScatteringFunctions(this);
 	}
 
-	Vector3Df SurfaceInteraction::Le(const Vector3Df& w) const
+	Vector3f SurfaceInteraction::Le(const Vector3f& w) const
 	{
-		return Vector3Df(0.f);
+		return Vector3f(0.f);
 	}
 }

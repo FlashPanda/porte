@@ -1,14 +1,14 @@
 #include "Filter.h"
 
-namespace panda
+namespace porte
 {
-	float BoxFilter::Evaluate(const Vector2Df& p) const
+	float BoxFilter::Evaluate(const Vector2f& p) const
 	{
 		return 1.f;
 	}
 
 	Filter* CreateBoxFilter()
 	{
-		return new BoxFilter(Vector2Df({ 0.5f, 0.5f }));
+		return new BoxFilter(Vector2f({ 0.5f, 0.5f }));
 	}
 }

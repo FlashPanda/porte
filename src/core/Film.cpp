@@ -5,7 +5,7 @@
 #include "Image.h"
 #include "Bounds.h"
 
-namespace panda
+namespace porte
 {
 	void XYZToRGB(const float xyz[3], float rgb[3])
 	{
@@ -32,7 +32,7 @@ namespace panda
 		{
 			for (int32 x = 0; x < mFilterTableWidth; ++x, ++offset)
 			{
-				Vector2Df p;
+				Vector2f p;
 				p[0] = (x + 0.5f) * mFilter->mRadius[0] / mFilterTableWidth;
 				p[1] = (y + 0.5f) * mFilter->mRadius[1] / mFilterTableWidth;
 				mFilterTable[offset] = mFilter->Evaluate(p);
@@ -59,12 +59,12 @@ namespace panda
 			return mPixels[index];
 	}
 
-	void Film::AddSample(const Vector2Df& pFilm, Vector3Df L, float sampleWeight)
+	void Film::AddSample(const Vector2f& pFilm, Vector3f L, float sampleWeight)
 	{
-		Vector2Df pFilmDiscrete = pFilm - Vector2Df({0.5f, 0.5f});
-		Vector2Df p0f = Ceil(pFilmDiscrete - mFilter->mRadius);
+		Vector2f pFilmDiscrete = pFilm - Vector2f({0.5f, 0.5f});
+		Vector2f p0f = Ceil(pFilmDiscrete - mFilter->mRadius);
 		Vector2Di p0({(int32)p0f.data[0], (int32)p0f.data[1]});
-		Vector2Df p1f = Floor(pFilmDiscrete + mFilter->mRadius);
+		Vector2f p1f = Floor(pFilmDiscrete + mFilter->mRadius);
 		Vector2Di p1 = Vector2Di({(int32)p1f.data[0], (int32)p1f.data[1]}) + Vector2Di({1, 1});
 
 		p0 = Max(p0, Vector2Di({ 0, 0 }));
@@ -125,7 +125,7 @@ namespace panda
 		}
 
 		// –¥»ÎRGBÕºœÒ
-		panda::WriteImage(mFilename, &rgb[0], Bounds2i(), mFullResolution);
+		porte::WriteImage(mFilename, &rgb[0], Bounds2i(), mFullResolution);
 	}
 
 	Film* CreateFilm(const Vector2Di& res, Filter* filter)

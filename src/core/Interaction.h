@@ -1,11 +1,9 @@
 #pragma once
 
-#include "MathUtil.h"
-#include "Matrix.hpp"
-#include "Vector.hpp"
-#include "Ray.h"
+#include <core/MathUtil.h>
+#include <core/Ray.h>
 
-namespace panda
+namespace porte
 {
 	class SceneNodeMesh;
 	class BSDF;
@@ -14,70 +12,70 @@ namespace panda
 	struct Interaction
 	{
 		Interaction() {}
-		Interaction(const Vector3Df& inP, const Vector3Df& inN, const Vector3Df& inPErr,
-			const Vector3Df& inWo) :
+		Interaction(const Vector3f& inP, const Vector3f& inN, const Vector3f& inPErr,
+			const Vector3f& inWo) :
 			p(inP), pErr(inPErr), n(inN), wo(inWo)
 		{
 		}
 
-		Interaction(const Vector3Df& p, const Vector3Df& wo)
+		Interaction(const Vector3f& p, const Vector3f& wo)
 			: p(p), wo(wo)
 		{}
 
-		Interaction(const Vector3Df& p)
+		Interaction(const Vector3f& p)
 			: p(p) {}
 
-		bool IsSurfaceInteraction() const {return n != Vector3Df(0.f); }
+		bool IsSurfaceInteraction() const {return n != Vector3f(0.f); }
 
-		Ray SpawnRay(const Vector3Df& d) const
+		Ray SpawnRay(const Vector3f& d) const
 		{
 			return Ray(p, d, FloatInfinity);
 		}
 
-		Ray SpawnRayTo(const Vector3Df& p2) const
+		Ray SpawnRayTo(const Vector3f& p2) const
 		{
-			Vector3Df d = p2 - p;
+			Vector3f d = p2 - p;
 			return Ray(p, d, FloatInfinity);
 		}
 
 		Ray SpawnRayTo(const Interaction& it) const
 		{
-			Vector3Df d = it.p - p;
+			Vector3f d = it.p - p;
 			return Ray(p, d, FloatInfinity);
 		}
 
-		Vector3Df p;
-		Vector3Df pErr;
-		Vector3Df wo;	// \Omega_o
-		Vector3Df n;
+		Vector3f p;
+		Vector3f pErr;
+		Vector3f wo;	// \Omega_o
+		Vector3f n;
 	};
 
 	struct SurfaceInteraction : public Interaction
 	{
 		SurfaceInteraction() {}
-		SurfaceInteraction(const Vector3Df& inP, const Vector3Df& inErr, 
-			const Vector2Df& inUV, const Vector3Df& inWo, 
-			const Vector3Df& dpdu, const Vector3Df& dpdv,
-			const Vector3Df& dndu, const Vector3Df& dndv,
+		SurfaceInteraction(const Vector3f& inP, const Vector3f& inErr, 
+			const Vector2f& inUV, const Vector3f& inWo, 
+			const Vector3f& dpdu, const Vector3f& dpdv,
+			const Vector3f& dndu, const Vector3f& dndv,
 			const Shape* inShape);
 
 		void ComputeScatteringFunctions(const Ray& ray);
 
-		Vector3Df Le(const Vector3Df& w) const;
+		Vector3f Le(const Vector3f& w) const;
 
-		Vector2Df uv;
+		Vector2f uv;
 
 		// 位置关于uv参数的偏导
-		Vector3Df dpdu, dpdv;
+		Vector3f dpdu, dpdv;
 
 		// 法线关于uv参数的偏导
-		Vector3Df dndu, dndv;
+		Vector3f dndu, dndv;
 
 		// 位置关于屏幕空间坐标的偏导
-		mutable Vector3Df dpdx, dpdy;
+		mutable Vector3f dpdx, dpdy;
 
 		// uv关于屏幕空间坐标的偏导
-		mutable Vector2Df duvdx, duvdy;
+		mutable Vector2f duvdx, duvdy;
 
 		BSDF* bsdf = nullptr;
 		const Shape* pShape = nullptr;

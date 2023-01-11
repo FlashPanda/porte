@@ -5,7 +5,7 @@
 #include "Interaction.h"
 #include "Light.h"
 
-namespace panda
+namespace porte
 {
 	Integrator::~Integrator() {}
 
@@ -53,7 +53,7 @@ namespace panda
 								Ray ray;
 								int32 rayWeight = mCamera->GenerateRay(cameraSample, &ray);
 
-								Vector3Df L(0.f);
+								Vector3f L(0.f);
 								if (rayWeight > 0) L = Li(ray, *pScene, *mSampler);
 
 								if (L.HasNaNs())
@@ -105,10 +105,10 @@ namespace panda
 
 	}
 
-	Vector3Df PathIntegrator::Li(const Ray& ray, const Scene& scene,
+	Vector3f PathIntegrator::Li(const Ray& ray, const Scene& scene,
 		Sampler& sampler, int32 depth) const
 	{
-		return Vector3Df(1.f);
+		return Vector3f(1.f);
 	}
 
 	DirectLightingIntegrator::DirectLightingIntegrator(LightStrategy strategy, int32 maxDepth) :
@@ -123,10 +123,10 @@ namespace panda
 
 	}
 
-	Vector3Df DirectLightingIntegrator::Li(const Ray& ray, const Scene& scene,
+	Vector3f DirectLightingIntegrator::Li(const Ray& ray, const Scene& scene,
 		Sampler& sampler, int32 depth) const
 	{
-		return Vector3Df(0.f);
+		return Vector3f(0.f);
 	}
 
 	DirectLightingIntegrator* CreateDirectLightingIntegrator(
@@ -141,10 +141,10 @@ namespace panda
 		return pIt;
 	}
 
-	Vector3Df WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
+	Vector3f WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
 		Sampler& sampler, int32 depth) const
 	{
-		Vector3Df L(0.f);
+		Vector3f L(0.f);
 
 		SurfaceInteraction isect;
 		if (!scene.Intersect(ray, &isect))
@@ -159,8 +159,8 @@ namespace panda
 		// 计算交点的发射光与反射光
 
 		// 初始化通用向量
-		const Vector3Df n = isect.n;	// 法线
-		Vector3Df wo = isect.wo;
+		const Vector3f n = isect.n;	// 法线
+		Vector3f wo = isect.wo;
 
 		// 计算交点的表面散射函数
 		isect.ComputeScatteringFunctions(ray);
@@ -174,15 +174,15 @@ namespace panda
 		// 遍历每个光源，计算直接光照
 		for (const auto& iter : scene.mPbrtLights)
 		{
-			Vector3Df wi;
+			Vector3f wi;
 			float pdf;
 			VisibilityTester visibility;
-			Vector3Df Li =
+			Vector3f Li =
 				iter->Sample_Li(isect, sampler.Get2D(), &wi, &pdf, &visibility);
 
 			if (Li.IsBlack() || pdf == 0) continue;
 
-			Vector3Df f = isect.bsdf->f(wo, wi);
+			Vector3f f = isect.bsdf->f(wo, wi);
 			if (!f.IsBlack() && visibility.Unoccluded(scene))
 				L += f * Li * AbsDotProduct(wi, n) / pdf;
 		}

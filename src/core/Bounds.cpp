@@ -1,6 +1,6 @@
 #include "Bounds.h"
 
-namespace panda
+namespace porte
 {
 	template <typename T>
 	inline const Vector<T, 3>& Bounds3<T>::operator[](int32 i) const
@@ -45,7 +45,7 @@ namespace panda
 	}
 
 	template <typename T>
-	bool Bounds3<T>::IntersectP(const Ray& ray, const Vector3Df& invDir,
+	bool Bounds3<T>::IntersectP(const Ray& ray, const Vector3f& invDir,
 		const int32 dirIsNeg[3]) const
 	{
 		const Bounds3f& bounds = *this;

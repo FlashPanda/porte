@@ -2,7 +2,7 @@
 #include "Bounds.h"
 #include "Shape.h"
 
-namespace panda
+namespace porte
 {
 	class SurfaceInteraction;
 	class Material;

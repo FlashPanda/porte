@@ -1,16 +1,15 @@
 #pragma once
 #include <memory>
-#include "MathUtil.h"
-#include "Vector.hpp"
-#include "Filter.h"
+#include <core/MathUtil.h>
+#include <core/Filter.h>
 
-namespace panda
+namespace porte
 {
 	inline void XYZToRGB(const float xyz[3], float rgb[3]);
 	inline void RGBToXYZ(const float rgb[3], float xyz[3]);
 
 	struct FilmTilePixel {
-		Vector3Df contribSum = 0.f;
+		Vector3f contribSum = 0.f;
 		float filterWeightSum = 0.f;
 	};
 
@@ -24,20 +23,20 @@ namespace panda
 	class Film
 	{
 	public:
-		Film(const Vector2Di& resolution, Filter* filter);
+		Film(const Vector2i& resolution, Filter* filter);
 
-		const Vector2Di mFullResolution;
+		const Vector2i mFullResolution;
 		Filter* mFilter = nullptr;
 
-		FilmTilePixel& GetTilePixel(const Vector2Di& pt);
+		FilmTilePixel& GetTilePixel(const Vector2i& pt);
 		
 
-		void AddSample(const Vector2Df& pFilm, Vector3Df L, float smapleWeight = 1.f);
+		void AddSample(const Vector2f& pFilm, Vector3f L, float smapleWeight = 1.f);
 
 		void WriteImage();
 
 	private:
-		Pixel& GetPixel(const Vector2Di& pt);
+		Pixel& GetPixel(const Vector2i& pt);
 
 		static constexpr int32 mFilterTableWidth = 16;	// constexpr是新的关键字，表明是编译期常量。这样可以用做指定数组长度
 		float mFilterTable[mFilterTableWidth * mFilterTableWidth];
@@ -47,5 +46,5 @@ namespace panda
 		std::string mFilename;
 	};
 
-	Film* CreateFilm(const Vector2Di& res, Filter* filter);
+	Film* CreateFilm(const Vector2i& res, Filter* filter);
 }

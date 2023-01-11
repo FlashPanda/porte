@@ -1,11 +1,10 @@
 #pragma once
-#include "MathUtil.h"
-#include "Vector.hpp"
-#include "Interaction.h"
+#include <core/MathUtil.h>
+#include <core/Interaction.h>
 
-namespace panda
+namespace porte
 {
-	inline float AbsCosTheta(const Vector3Df& w) { return std::abs(w[2]); }
+	inline float AbsCosTheta(const Vector3f& w) { return std::abs(w[2]); }
 
 	// 反射类型大概可以归结为4种：漫射（diffuse），光泽反射（gloosy），镜面反射（specular），回射（retro-reflective）
 	// 回射被归到光泽反射中。
@@ -41,12 +40,12 @@ namespace panda
 		BxDF(BxDFType type) : mType(type) {}
 		virtual ~BxDF() {}
 		bool MatchesFlags(BxDFType t) const {return (mType & t) == mType; }
-		virtual Vector3Df f(const Vector3Df& wo, const Vector3Df& wi) const = 0;
+		virtual Vector3f f(const Vector3f& wo, const Vector3f& wi) const = 0;
 		// 区别在于这个wi是输出的变量
-		virtual Vector3Df Sample_f(const Vector3Df& wo, Vector3Df* wi,
-									const Vector2Df& sample, float* pdf,
+		virtual Vector3f Sample_f(const Vector3f& wo, Vector3f* wi,
+									const Vector2f& sample, float* pdf,
 									BxDFType* sampledType = nullptr) const;
-		virtual float Pdf(const Vector3Df& wo, const Vector3Df& wi) const;
+		virtual float Pdf(const Vector3f& wo, const Vector3f& wi) const;
 
 		virtual std::string ToString() const = 0;
 
@@ -57,11 +56,11 @@ namespace panda
 	class LambertianReflection : public BxDF
 	{
 	public:
-		LambertianReflection(const Vector3Df& ref) : BxDF(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), mReflection(ref)
+		LambertianReflection(const Vector3f& ref) : BxDF(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), mReflection(ref)
 		{}
 
 	private:
-		const Vector3Df mReflection;
+		const Vector3f mReflection;
 	};
 
 	// BSDF
@@ -84,26 +83,26 @@ namespace panda
 
 		int32 NumComponents(BxDFType flags = BSDF_ALL) const;
 
-		Vector3Df WorldToLocal(const Vector3Df& v) const
+		Vector3f WorldToLocal(const Vector3f& v) const
 		{
-			return Vector3Df({DotProduct(v, ss), DotProduct(v, ts), DotProduct(v, ns)});
+			return Vector3f({DotProduct(v, ss), DotProduct(v, ts), DotProduct(v, ns)});
 		}
 
-		Vector3Df LocalToWorld(const Vector3Df& v) const
+		Vector3f LocalToWorld(const Vector3f& v) const
 		{
-			return Vector3Df({ss[0] * v[0] + ts[0] * v[1] + ns[0] * v[2],
+			return Vector3f({ss[0] * v[0] + ts[0] * v[1] + ns[0] * v[2],
 				ss[1] * v[0] + ts[1] * v[1] + ns[1] * v[2],
 				ss[2] * v[0] + ts[2] * v[1] + ns[2] * v[2]});
 		}
 
-		Vector3Df f(const Vector3Df& woW, const Vector3Df& wiW,
+		Vector3f f(const Vector3f& woW, const Vector3f& wiW,
 			BxDFType flags = BSDF_ALL) const;
 
-		Vector3Df Sample_f(const Vector3Df& wo, Vector3Df* wi, const Vector2Df& u,
+		Vector3f Sample_f(const Vector3f& wo, Vector3f* wi, const Vector2f& u,
 			float* pdf, BxDFType type = BSDF_ALL,
 			BxDFType* sampledType = nullptr) const;
 
-		float Pdf(const Vector3Df& wo, const Vector3Df& wi,
+		float Pdf(const Vector3f& wo, const Vector3f& wi,
 			BxDFType flags = BSDF_ALL) const;
 
 		std::string ToString() const;
@@ -112,8 +111,8 @@ namespace panda
 	private:
 		// 想自己控制对象的释放，故定义成私有析构函数。但是这有必要吗？
 		~BSDF() {}
-		const Vector3Df ns, ng;		// todo: ns是shading normal
-		const Vector3Df ss, ts;		// 切线与副切线
+		const Vector3f ns, ng;		// todo: ns是shading normal
+		const Vector3f ss, ts;		// 切线与副切线
 		static constexpr int32 MaxBxDFs = 8;	// 最多8个BxDF
 		BxDF* bxdfs[MaxBxDFs];
 		int32 nBxDFs = 0;	// bxdf的数量

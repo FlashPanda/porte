@@ -1,6 +1,6 @@
 #include "Sampler.h"
 
-namespace panda
+namespace porte
 {
 	Sampler::~Sampler() {}
 
@@ -15,7 +15,7 @@ namespace panda
 	CameraSample Sampler::GetCameraSample(const Vector2Di& pRaster)
 	{
 		CameraSample cs;
-		Vector2Df vt;
+		Vector2f vt;
 		vt[0] = pRaster[0];
 		vt[1] = pRaster[1];
 		cs.pFilm = vt + Get2D();
@@ -32,8 +32,8 @@ namespace panda
 		return rng.UniformFloat();
 	}
 
-	Vector2Df RandomSampler::Get2D()
+	Vector2f RandomSampler::Get2D()
 	{
-		return Vector2Df({rng.UniformFloat(), rng.UniformFloat()});
+		return Vector2f({rng.UniformFloat(), rng.UniformFloat()});
 	}
 }

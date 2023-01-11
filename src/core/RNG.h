@@ -3,7 +3,7 @@
 #include "MathUtil.h"
 #include <algorithm>
 
-namespace panda
+namespace porte
 {
 	static const double DoubleOneMinusEpsilon = 0x1.fffffffffffffp-1;
 	static const float FloatOneMinusEpsilon = 0x1.fffffep-1;

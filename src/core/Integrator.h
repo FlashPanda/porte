@@ -1,13 +1,12 @@
 #pragma once
-#include "MathUtil.h"
-#include "Vector.hpp"
+#include <core/MathUtil.h>
 #include <functional>
 
 /************************************************************************/
 /* »ý·ÖÆ÷                                                                     */
 /************************************************************************/
 
-namespace panda
+namespace porte
 {
 	class Scene;
 	class Sampler;
@@ -37,7 +36,7 @@ namespace panda
 				mCamera = camera;
 			}
 
-			virtual Vector3Df Li(const Ray& ray, const Scene& scene,
+			virtual Vector3f Li(const Ray& ray, const Scene& scene,
 				Sampler& sampler, int32 depth = 0) const = 0;
 
 			void RenderTile(std::function<void(Vector2Di)> func, Vector2Di tile);
@@ -57,7 +56,7 @@ namespace panda
 			virtual void Render(const Scene* pScene);
 
 
-			virtual Vector3Df Li(const Ray& ray, const Scene& scene,
+			virtual Vector3f Li(const Ray& ray, const Scene& scene,
 				Sampler& sampler, int32 depth = 0) const;
 	};
 
@@ -77,7 +76,7 @@ namespace panda
 		virtual ~DirectLightingIntegrator();
 		virtual void Render(const Scene* pScene);
 
-		virtual Vector3Df Li(const Ray& ray, const Scene& scene,
+		virtual Vector3f Li(const Ray& ray, const Scene& scene,
 			Sampler& sampler, int32 depth = 0) const;
 
 	private:
@@ -98,7 +97,7 @@ namespace panda
 		// WhittedIntegrator Public Methods
 		WhittedIntegrator()
 			: SamplerIntegrator() {}
-		Vector3Df Li(const Ray& ray, const Scene& scene,
+		Vector3f Li(const Ray& ray, const Scene& scene,
 			Sampler& sampler, int32 depth = 0) const;
 	};
 }

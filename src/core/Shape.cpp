@@ -2,7 +2,7 @@
 #include "Interaction.h"
 #include "Transform.h"
 
-namespace panda
+namespace porte
 {
 	Shape::~Shape() {}
 
@@ -22,11 +22,11 @@ namespace panda
 		return Intersect(ray, nullptr, nullptr);
 	}
 
-	Interaction Shape::Sample(const Interaction& ref, const Vector2Df& u,
+	Interaction Shape::Sample(const Interaction& ref, const Vector2f& u,
 		float* pdf) const
 	{
 		Interaction intr = Sample(u, pdf);
-		Vector3Df wi = intr.p - ref.p;
+		Vector3f wi = intr.p - ref.p;
 
 		if (GetLengthSquare(wi) == 0)
 			*pdf = 0;
@@ -42,7 +42,7 @@ namespace panda
 		return intr;
 	}
 
-	float Shape::Pdf(const Interaction& ref, const Vector3Df& wi) const
+	float Shape::Pdf(const Interaction& ref, const Vector3f& wi) const
 	{
 		// TODO: Intersect sample ray with area light geometry
 		return 0.f;
@@ -51,9 +51,9 @@ namespace panda
 	Bounds3f Triangle::ObjectBound() const
 	{
 		// 这里和pbrt中不一样，我保存的是local system中的坐标，不是世界空间中的坐标。
-		const Vector3Df& p0 = mesh->GetVertexArray()[v[0]];
-		const Vector3Df& p1 = mesh->GetVertexArray()[v[1]];
-		const Vector3Df& p2 = mesh->GetVertexArray()[v[2]];
+		const Vector3f& p0 = mesh->GetVertexArray()[v[0]];
+		const Vector3f& p1 = mesh->GetVertexArray()[v[1]];
+		const Vector3f& p2 = mesh->GetVertexArray()[v[2]];
 
 		return Union(Bounds3f(p0, p1), p2);
 	}
@@ -61,13 +61,13 @@ namespace panda
 	Bounds3f Triangle::WorldBound() const
 	{
 		// 这里和pbrt中不一样，我保存的是local system中的坐标，不是世界空间中的坐标。
-		const Vector3Df& p0 = mesh->GetVertexArray()[v[0]];
-		const Vector3Df& p1 = mesh->GetVertexArray()[v[1]];
-		const Vector3Df& p2 = mesh->GetVertexArray()[v[2]];
+		const Vector3f& p0 = mesh->GetVertexArray()[v[0]];
+		const Vector3f& p1 = mesh->GetVertexArray()[v[1]];
+		const Vector3f& p2 = mesh->GetVertexArray()[v[2]];
 
-		const Vector3Df& wp0 = TransformPoint(p0, *ObjectToWorld);
-		const Vector3Df& wp1 = TransformPoint(p1, *ObjectToWorld);
-		const Vector3Df& wp2 = TransformPoint(p2, *ObjectToWorld);
+		const Vector3f& wp0 = TransformPoint(p0, *ObjectToWorld);
+		const Vector3f& wp1 = TransformPoint(p1, *ObjectToWorld);
+		const Vector3f& wp2 = TransformPoint(p2, *ObjectToWorld);
 		return Union(Bounds3f(wp0, wp1), wp2);
 	}
 
@@ -81,16 +81,16 @@ namespace panda
 		//	return false;
 
 		//// 世界空间中的坐标
-		//const Vector3Df& p0 = mesh->GetVertexArray()[v[0]];
-		//const Vector3Df& p1 = mesh->GetVertexArray()[v[1]];
-		//const Vector3Df& p2 = mesh->GetVertexArray()[v[2]];
+		//const Vector3f& p0 = mesh->GetVertexArray()[v[0]];
+		//const Vector3f& p1 = mesh->GetVertexArray()[v[1]];
+		//const Vector3f& p2 = mesh->GetVertexArray()[v[2]];
 
-		//Vector3Df wp0 = TransformPoint(p0, *ObjectToWorld);
-		//Vector3Df wp1 = TransformPoint(p1, *ObjectToWorld);
-		//Vector3Df wp2 = TransformPoint(p2, *ObjectToWorld);
+		//Vector3f wp0 = TransformPoint(p0, *ObjectToWorld);
+		//Vector3f wp1 = TransformPoint(p1, *ObjectToWorld);
+		//Vector3f wp2 = TransformPoint(p2, *ObjectToWorld);
 
 		//// 计算平面法线
-		//Vector3Df normal = CrossProduct(wp1 - wp0, wp2 - wp0);
+		//Vector3f normal = CrossProduct(wp1 - wp0, wp2 - wp0);
 		//normal = Normalize(normal);
 
 		//if (DotProduct(normal, ray.d) == 0)	// 法线与光线方向平行，意味着没有交点
@@ -101,7 +101,7 @@ namespace panda
 		//	return false;
 		//
 		//// 交点位置
-		//Vector3Df isectPoint = ray.o + t * ray.d;
+		//Vector3f isectPoint = ray.o + t * ray.d;
 
 		//// 通过edge函数，判断是否在三角形内部。
 		//// 如果在边上，那么可以算是在内部，也可以不算。
@@ -115,25 +115,25 @@ namespace panda
 		// 用一个仿射变换将ray转换成，端点在原点，然后出射方向为z轴。
 
 		// 将局部空间坐标转换为世界空间中的坐标
-		const Vector3Df& p0 = mesh->GetVertexArray()[v[0]];
-		const Vector3Df& p1 = mesh->GetVertexArray()[v[1]];
-		const Vector3Df& p2 = mesh->GetVertexArray()[v[2]];
+		const Vector3f& p0 = mesh->GetVertexArray()[v[0]];
+		const Vector3f& p1 = mesh->GetVertexArray()[v[1]];
+		const Vector3f& p2 = mesh->GetVertexArray()[v[2]];
 
-		Vector3Df wp0 = TransformPoint(p0, *ObjectToWorld);
-		Vector3Df wp1 = TransformPoint(p1, *ObjectToWorld);
-		Vector3Df wp2 = TransformPoint(p2, *ObjectToWorld);
+		Vector3f wp0 = TransformPoint(p0, *ObjectToWorld);
+		Vector3f wp1 = TransformPoint(p1, *ObjectToWorld);
+		Vector3f wp2 = TransformPoint(p2, *ObjectToWorld);
 
 		// 三角形位置平移到以射线原点为坐标系原点
-		Vector3Df p0t = wp0 - ray.o;
-		Vector3Df p1t = wp1 - ray.o;
-		Vector3Df p2t = wp2 - ray.o;
+		Vector3f p0t = wp0 - ray.o;
+		Vector3f p1t = wp1 - ray.o;
+		Vector3f p2t = wp2 - ray.o;
 
 		// 找到方向的最长轴，转换之后要把它当成z轴。防止z值是0，导致计算错误。
 		// 相应的方向向量以及顶点向量就像是乘上一个置换矩阵。
 		int32 kz = MaxDimension(Abs(ray.d));
 		int32 kx = (kz + 1) % 3;
 		int32 ky = (kx + 1) % 3;
-		Vector3Df d = Permute(ray.d, kx, ky, kz);
+		Vector3f d = Permute(ray.d, kx, ky, kz);
 		p0t = Permute(p0t, kx, ky, kz);
 		p1t = Permute(p1t, kx, ky, kz);
 		p2t = Permute(p2t, kx, ky, kz);
@@ -200,11 +200,11 @@ namespace panda
 		float b2 = e2 * invDet;
 
 		// 计算三角形的偏导
-		Vector3Df dpdu, dpdv;
-		Vector2Df uv[3];
+		Vector3f dpdu, dpdv;
+		Vector2f uv[3];
 		GetUVs(uv);
-		Vector2Df duv02 = uv[0] - uv[2], duv12 = uv[1] - uv[2];
-		Vector3Df dp02 = p0 - p2, dp12 = p1 - p2;
+		Vector2f duv02 = uv[0] - uv[2], duv12 = uv[1] - uv[2];
+		Vector3f dp02 = p0 - p2, dp12 = p1 - p2;
 		float determinant = duv02[0] * duv12[1] - duv02[1] * duv12[0];
 		// uv是否退化
 		bool degenerateUV = std::abs(determinant) < 1e-8;
@@ -218,7 +218,7 @@ namespace panda
 		if (degenerateUV || GetLengthSquare(CrossProduct(dpdu, dpdv)) == 0)
 		{
 			// 如果偏导矩阵行列式的值是0
-			Vector3Df ng = CrossProduct(p2 - p0, p1 - p0);
+			Vector3f ng = CrossProduct(p2 - p0, p1 - p0);
 			if (GetLengthSquare(ng) == 0)
 				return false;
 
@@ -227,18 +227,18 @@ namespace panda
 
 		// TODO: Error bounds
 
-		Vector3Df pHit = b0 * wp0 + b1 * wp1 + b2 * wp2;
-		Vector2Df uvHit = b0 * uv[0] + b1 * uv[1] + b2 * uv[2];
+		Vector3f pHit = b0 * wp0 + b1 * wp1 + b2 * wp2;
+		Vector2f uvHit = b0 * uv[0] + b1 * uv[1] + b2 * uv[2];
 		
-		*isect = SurfaceInteraction(pHit, Vector3Df(), 
+		*isect = SurfaceInteraction(pHit, Vector3f(), 
 			uvHit, -ray.d,
 			dpdu, dpdv,
-			Vector3Df(0.f), Vector3Df(0.f),
+			Vector3f(0.f), Vector3f(0.f),
 			this);
 
 		// 插值获得法线
-		const std::vector<Vector3Df> normals = mesh->GetNormalArray();
-		Vector3Df ns = b0 * normals[v[0]] + b1 * normals[v[1]] + b2 * normals[v[2]];
+		const std::vector<Vector3f> normals = mesh->GetNormalArray();
+		Vector3f ns = b0 * normals[v[0]] + b1 * normals[v[1]] + b2 * normals[v[2]];
 	
 		isect->n = ns;
 		*tHit = t;
@@ -254,9 +254,9 @@ namespace panda
 
 	float Triangle::Area() const
 	{
-		const Vector3Df& p0 = mesh->GetVertexArray()[v[0]];
-		const Vector3Df& p1 = mesh->GetVertexArray()[v[1]];
-		const Vector3Df& p2 = mesh->GetVertexArray()[v[2]];
+		const Vector3f& p0 = mesh->GetVertexArray()[v[0]];
+		const Vector3f& p1 = mesh->GetVertexArray()[v[1]];
+		const Vector3f& p2 = mesh->GetVertexArray()[v[2]];
 
 		return GetLength(CrossProduct(p1 - p0, p2 - p0)) * 0.5f;
 	}

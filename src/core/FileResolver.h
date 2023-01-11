@@ -3,7 +3,7 @@
 #include "Filesystem.h"
 #include <iosfwd>
 
-namespace panda
+namespace porte
 {
 	class FileResolver
 	{

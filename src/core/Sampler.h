@@ -1,11 +1,9 @@
 #pragma once
 
-#include "MathUtil.h"
-#include "Vector.hpp"
-#include "SceneNodeCamera.h"
-#include "RNG.h"
+#include <core/MathUtil.h>
+#include <core/RNG.h>
 
-namespace panda
+namespace porte
 {
 	class Sampler
 	{
@@ -14,7 +12,7 @@ namespace panda
 		Sampler(int32 samplesPerPixel);
 		virtual void StartPixel(const Vector2Di& p);
 		virtual float Get1D() = 0;
-		virtual Vector2Df Get2D() = 0;
+		virtual Vector2f Get2D() = 0;
 		CameraSample GetCameraSample(const Vector2Di& pRaster);
 		virtual bool StartNextSample();
 		int32 CurrentSampleNumber() const { return mCurrentPixelSampleIndex; }
@@ -31,7 +29,7 @@ namespace panda
 		RandomSampler(int32 ns, int32 seed = 0) : Sampler(ns), rng(seed) {}
 
 		virtual float Get1D();
-		virtual Vector2Df Get2D();
+		virtual Vector2f Get2D();
 
 	private:
 		RNG rng;

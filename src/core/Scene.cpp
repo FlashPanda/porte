@@ -1,29 +1,20 @@
-#include "Scene.h"
-#include "SceneObject.h"
-#include "SceneNode.h"
-#include "SceneObjectCamera.h"
-#include "SceneNodeCamera.h"
-#include "SceneObjectMaterial.h"
-#include "SceneObjectMesh.h"
-#include "SceneNodeMesh.h"
-#include "SceneNodeLight.h"
-#include "SceneObjectLight.h"
-#include "Image.h"
 #include <fstream>
 #include <filesystem>	// c++ 17
-#include "Integrator.h"
-#include "Sampler.h"
-#include "ObjLoader.h"
-#include "Ray.h"
-#include "Interaction.h"
-#include "Shape.h"
-#include "Primitive.h"
-#include "Light.h"
+#include <core/Scene.h>
+#include <core/Integrator.h>
+#include <core/Sampler.h>
+#include <core/ObjLoader.h>
+#include <core/Ray.h>
+#include <core/Interaction.h>
+#include <core/Shape.h>
+#include <core/Primitive.h>
+#include <core/Light.h>
+#include <core/Film.h>
 
 /*
 * 经过验证，Maya中导出的usda场景，其中的transform是可以直接用的。也就是说，它也是row major的。
 */
-namespace panda
+namespace porte
 {
 	void Scene::LoadSceneFromFile(std::string filename)
 	{
@@ -58,7 +49,7 @@ namespace panda
 
 	void Scene::Render()
 	{
-		mIntegrator->Render(this);
+		//mIntegrator->Render(this);
 	}
 
 	bool Scene::Intersect(const Ray& ray, SurfaceInteraction* insec) const
@@ -192,8 +183,7 @@ namespace panda
 				//	}
 				//}
 
-				mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5,
-					std::shared_ptr<Sampler>(mSampler), mMainCamera);
+				mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, std::shared_ptr<Sampler>(mSampler));
 			}
 			else
 			{
@@ -210,7 +200,7 @@ namespace panda
 
 	Film* Scene::ParseXmlFilm(const pugi::xml_node& node, Filter* inFilter)
 	{
-		Vector2Di res({1280, 720});
+		Vector2i res({1280, 720});
 		pugi::xml_attribute widthAttr = node.attribute("width");
 		if (!widthAttr.empty())
 		{
@@ -297,7 +287,6 @@ namespace panda
 		float nearClip = 0.1f;
 		float farClip = 1000.f;
 		Matrix4f mat;
-		mat.SetIdentity();
 
 		pugi::xml_node propertyNode = node.child("property");
 		if (propertyNode.empty())
@@ -335,10 +324,6 @@ namespace panda
 			mat = tPair.second;
 		}
 		
-		// 创建相机对象与节点
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCamera = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		std::shared_ptr<SceneNodeCamera> pNodeCamera = std::make_shared<SceneNodeCamera>(cameraName);
-		pNodeCamera->AddSceneObjectName(cameraName);
 
 		pCamera->mNear = nearClip;
 		pCamera->mFar = farClip;
@@ -363,7 +348,7 @@ namespace panda
 		if (filmNode.empty())
 		{
 			std::cout << "Camera node has no \"Film\" child node. Set Default to (1280,720). " << std::endl;
-			tFilm = CreateFilm(Vector2Di({1280, 720}), tFilter);
+			tFilm = CreateFilm(Vector2i({1280, 720}), tFilter);
 		}
 		else
 		{
@@ -480,7 +465,7 @@ namespace panda
 				return;
 			}
 
-			std::vector<Vector3Df> points;
+			std::vector<Vector3f> points;
 			{
 				std::string str(pointsAttr.as_string());
 				std::vector<std::string> tokens = Split(str, " ");
@@ -499,7 +484,7 @@ namespace panda
 				int32 nPoints = tokens.size() / 3;
 				for (int32 i = 0; i < nPoints; ++i)
 				{
-					Vector3Df pos;
+					Vector3f pos;
 					pos[0] = std::atof(tokens[i * 3 + 0].c_str());
 					pos[1] = std::atof(tokens[i * 3 + 1].c_str());
 					pos[2] = std::atof(tokens[i * 3 + 2].c_str());
@@ -522,7 +507,7 @@ namespace panda
 				return;
 			}
 
-			std::vector<Vector3Df> normals;
+			std::vector<Vector3f> normals;
 			{
 				std::string str(normalsAttr.as_string());
 				std::vector<std::string> tokens = Split(str, " ");
@@ -536,7 +521,7 @@ namespace panda
 				int32 nNormals = tokens.size() / 3;
 				for (int32 i = 0; i < nNormals; ++i)
 				{
-					Vector3Df normal;
+					Vector3f normal;
 					normal[0] = std::atof(tokens[i * 3 + 0].c_str());
 					normal[1] = std::atof(tokens[i * 3 + 1].c_str());
 					normal[2] = std::atof(tokens[i * 3 + 2].c_str());
@@ -546,7 +531,7 @@ namespace panda
 
 			// uvs （允许没有uv，但是如果要有，比如和顶点数量一致）
 			pugi::xml_node uvsNode = node.child("uvs");
-			std::vector<Vector2Df> uvs;
+			std::vector<Vector2f> uvs;
 			if (uvsNode.empty())
 			{
 				std::cout << "triangle mesh has no uvs child node! Skip uvs." << std::endl;
@@ -571,7 +556,7 @@ namespace panda
 					int32 count = tokens.size() / 2;
 					for (int32 i = 0; i < count; ++i)
 					{
-						Vector2Df uv;
+						Vector2f uv;
 						uv[0] = std::atof(tokens[i * 2 + 0].c_str());
 						uv[1] = std::atof(tokens[i * 2 + 1].c_str());
 						uvs.push_back(uv);
@@ -716,7 +701,7 @@ namespace panda
 			if (std::string(typeAttr.as_string()) == "matte")
 			{
 				pugi::xml_attribute kdAttr = node.attribute("Kd");
-				Vector3Df kd(0.f);
+				Vector3f kd(0.f);
 				if (kdAttr.empty())
 				{
 					kd.Set(1.f);
@@ -765,7 +750,7 @@ namespace panda
 				}
 
 				// 位置
-				Vector3Df pos;
+				Vector3f pos;
 				pugi::xml_attribute posAttr = node.attribute("position");
 				if (posAttr.empty())
 				{
@@ -778,7 +763,7 @@ namespace panda
 				}
 
 				// 颜色
-				Vector3Df color;
+				Vector3f color;
 				pugi::xml_attribute colorAttr = node.attribute("color");
 				if (colorAttr.empty())
 				{
@@ -802,10 +787,7 @@ namespace panda
 					intensity = intensityAttr.as_float();
 				}
 
-				std::shared_ptr<SceneObjectLightPoint> pLightPoint = std::make_shared<SceneObjectLightPoint>(name);
-				std::shared_ptr< SceneNodeLight> pNodeLight = std::make_shared<SceneNodeLight>(name);
-
-				pLightPoint->mColor = Vector4Df({ color[0], color[1], color[2], 1.f });
+				pLightPoint->mColor = Vector4f({ color[0], color[1], color[2], 1.f });
 				pLightPoint->mIntensity = intensity;
 				pNodeLight->AppendTransform(BuildTranslationMatrix(pos));
 
@@ -817,17 +799,17 @@ namespace panda
 		}
 	}
 
-	Vector3Df Scene::ParseVectorString(const std::string& str)
+	Vector3f Scene::ParseVectorString(const std::string& str)
 	{
 		std::vector<std::string> vecs = Split(str);
 
 		if (vecs.size() != 3)
 		{
-			return Vector3Df({0.f, 0.f, 0.f});
+			return Vector3f({0.f, 0.f, 0.f});
 		}
 		else
 		{
-			return Vector3Df({std::stof(vecs[0]), std::stof(vecs[1]), std::stof(vecs[2]) });
+			return Vector3f({std::stof(vecs[0]), std::stof(vecs[1]), std::stof(vecs[2]) });
 		}
 	}
 
@@ -898,7 +880,7 @@ namespace panda
 						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
 					}
 					
-					Vector3Df lookat({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
+					Vector3f lookat({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
 					attr = ch.attribute("origin");
 					if (attr.empty())
@@ -913,7 +895,7 @@ namespace panda
 						std::cout << "lookat node \"origin\" attribute value error!" << std::endl;
 						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
 					}
-					Vector3Df origin({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
+					Vector3f origin({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
 					attr = ch.attribute("up");
 					if (attr.empty())
@@ -928,7 +910,7 @@ namespace panda
 						std::cout << "lookat node \"up\" attribute value error!" << std::endl;
 						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
 					}
-					Vector3Df up({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
+					Vector3f up({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
 					Matrix4f mat = BuildViewMatrixRH(origin, lookat, up);
 					return std::pair<std::string, Matrix4f>(name.name(), mat);
@@ -941,7 +923,7 @@ namespace panda
 					float y = attr.as_float();
 					attr = ch.attribute("z");
 					float z = attr.as_float();
-					Vector3Df vec({x, y, z});
+					Vector3f vec({x, y, z});
 
 					attr = ch.attribute("angle");
 					float angle = attr.as_float();
@@ -955,9 +937,9 @@ namespace panda
 					float y = attr.as_float();
 					attr = ch.attribute("z");
 					float z = attr.as_float();
-					Vector3Df vec({ x, y, z });
+					Vector3f vec({ x, y, z });
 
-					matrixs.push_back(BuildTranslationMatrix(vec));
+					matrixs.push_back();
 				}
 				else if (std::string(ch.name()) == "scale")
 				{
@@ -967,7 +949,7 @@ namespace panda
 					float y = attr.as_float();
 					attr = ch.attribute("z");
 					float z = attr.as_float();
-					Vector3Df vec({ x, y, z });
+					Vector3f vec({ x, y, z });
 
 					matrixs.push_back(BuildScaleMatrix(vec));
 				}
@@ -1034,7 +1016,6 @@ namespace panda
 			mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, 
 				std::shared_ptr<Sampler>(mSampler), mMainCamera);
 		}
-
 	}
 
 	void Scene::OutputNode(const pugi::xml_node& node)
@@ -1045,416 +1026,4 @@ namespace panda
 			std::cout << "attr name = " << iter->name() << ", value = " << iter->value() << std::endl << std::endl;
 		}
 	}
-
-#pragma region 测试
-	void Scene::CreateTestScene1()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, -1.f, 0.f });
-		Vector3Df vec2({ 1.f, -1.f, 0.f });
-		Vector3Df vec3({ 1.f, 1.f, 0.f });
-		Vector3Df vec4({ -1.f, 1.f, 0.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode});
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void Scene::CreateTestScene2()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, 0.f, 1.f });
-		Vector3Df vec2({ 1.f, 0.f, 1.f });
-		Vector3Df vec3({ 1.f, 0.f, -1.f });
-		Vector3Df vec4({ -1.f, 0.f, -1.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-			}));
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode });
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void Scene::CreateTestScene3()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, 0.f, 1.f });
-		Vector3Df vec2({ 1.f, 0.f, 1.f });
-		Vector3Df vec3({ 1.f, 0.f, -1.f });
-		Vector3Df vec4({ -1.f, 0.f, -1.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			0.8660253882408142, 0, -0.5, 0,
-			0.5, 0, 0.8660253882408142, 0,
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-			}));
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode });
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void Scene::CreateTestScene4()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, 0.f, 1.f });
-		Vector3Df vec2({ 1.f, 0.f, 1.f });
-		Vector3Df vec3({ 1.f, 0.f, -1.f });
-		Vector3Df vec4({ -1.f, 0.f, -1.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			0.8660253882408142, 0, -0.5, 0,
-			0.5, 0, 0.8660253882408142, 0,
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-			}));
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode });
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		pCameraNode->AppendTransform(Matrix4f({
-			0.8660253882408142, 0, -0.5, 0,
-			0, 1, 0, 0, 
-			0.5, 0, 0.8660253882408142, 0,
-			2, 0, 0, 1
-			}));
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void CreatePPMImage(std::shared_ptr<Image> pImage)
-	{
-		std::fstream file;
-		file.open("C:\\1001.ppm", std::fstream::out);
-
-		file << "P3\n";
-		file << pImage->Width << " " << pImage->Height << "\n";
-		file << "255\n";
-		char* pData = (char*)(pImage->Data);
-		if (pImage->Bitcount == 24)
-		{
-			for (uint32 i = 0; i < pImage->DataSize; ++i)
-			{
-				int32 t = 0;
-				t = t | pData[i];
-				t = t & 0xFF;
-				file << t;
-				if ((i + 1) % (3 * pImage->Width) == 0)
-					file << '\n';
-				else
-					file << ' ';
-			}
-		}
-		else if (pImage->Bitcount == 32)
-		{
-			for (uint32 i = 0; i < pImage->DataSize;)
-			{
-				int32 t = 0;
-				t = t | pData[i];
-				t = t & 0xFF;
-				file << t << ' ';
-
-				t = 0;
-				t = t | pData[i + 1];
-				t = t & 0xFF;
-				file << t << ' ';
-
-				t = 0;
-				t = t | pData[i + 2];
-				t = t & 0xFF;
-				file << t << '\n';
-
-				i += 4;
-			}
-		}
-		else
-		{
-			std::cout << "Error, bitcount != 24 and bitcount != 32" << std::endl;
-			return;
-		}
-	}
-
-	void CreatePPMImage(const Vector2Di& res, float* rgb)
-	{
-		std::fstream file;
-		file.open("C:\\1002.ppm", std::fstream::out);
-
-		file << "P3\n";
-		file << res[0] << " " << res[1] << "\n";
-		file << "255\n";
-		for (int32 y = 0; y < res[1]; ++y)
-		{
-			for (int32 x = 0; x < res[0]; ++x)
-			{
-#define TO_BYTE(v) (uint8)std::clamp(255.f * GammaCorrect(v) + 0.5f, 0.f, 255.f)
-				file << TO_BYTE(rgb[3 * (y * res[0] + x) + 0]);
-				file << TO_BYTE(rgb[3 * (y * res[0] + x) + 1]);
-				file << TO_BYTE(rgb[3 * (y * res[0] + x) + 2]);
-#undef TO_BYTE
-
-				if (x == res[0] - 1)
-					file << '\n';
-				else
-					file << ' ';
-			}
-		}
-	}
-#pragma endregion 
 }

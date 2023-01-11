@@ -10,13 +10,15 @@ set (CMAKE_CXX_STANDARD 17)
 # 要让这个全局起作用，一定要加在add_subdirectory之前
 add_compile_options(-wd4819)
 
-include_directories(src)
-include_directories(ext/drjit/include)
-include_directories(ext/drjit/ext/drjit-core/include)
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(ext)
+
+include_directories(src)
+include_directories(ext/drjit/include)
+include_directories(ext/drjit/ext/drjit-core/include)
+include_directories(ext/pugixml/src)
+include_directories(ext)
 
 FILE (GLOB PORTE_SOURCE
 	src/core/*

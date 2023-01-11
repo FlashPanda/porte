@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Vector.hpp"
+#include <core/MathUtil.h>
 #include <iostream>
 
-namespace panda
+namespace porte
 {
 	class Ray;
 
@@ -68,7 +68,7 @@ namespace panda
 			return b.pMin != pMin || b.pMax != pMax;
 		}
 
-		Vector<T, 2> Lerp(const Vector2Df& t) const
+		Vector<T, 2> Lerp(const Vector2f& t) const
 		{
 			return Vector<T, 2>({
 				::Lerp(t[0], pMin[0], pMax[0]),
@@ -167,7 +167,7 @@ namespace panda
 
 		bool IntersectP(const Ray& ray, float* hitt0 = nullptr, float* hitt1 = nullptr) const;
 
-		inline bool IntersectP(const Ray& ray, const Vector3Df& invDir,
+		inline bool IntersectP(const Ray& ray, const Vector3f& invDir,
 			const int32 dirIsNeg[3]) const;
 
 
@@ -186,7 +186,7 @@ namespace panda
 	typedef Bounds3<int32> Bounds3i;
 
 	template <typename T>
-	Bounds3<T> Union(const Bounds3<T>& b, const Vector<T, 3>& p)
+	Bounds3<T> Union(const Bounds3<T>& b, const drjit::Array<T, 3>& p)
 	{
 		Bounds3<T> ret;
 		ret.pMin = Min(b.pMin, p);

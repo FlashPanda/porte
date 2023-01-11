@@ -4,7 +4,7 @@
 #include "Memory.h"
 #include "Material.h"
 
-namespace panda
+namespace porte
 {
 	Primitive::~Primitive() {}
 
@@ -69,7 +69,7 @@ namespace panda
 			centroid(.5f * bounds.pMin + .5f * bounds.pMax) {}
 		size_t primitiveNumber;
 		Bounds3f bounds;
-		Vector3Df centroid;
+		Vector3f centroid;
 	};
 
 	struct BVHBuildNode
@@ -166,7 +166,7 @@ namespace panda
 		if (!nodes) return false;
 
 		bool hit = false;
-		Vector3Df invDir({1 / ray.d[0], 1 / ray.d[1], 1 / ray.d[2]});	// 这个是为了计算做的简化。因为包围盒的面都是垂直轴的。
+		Vector3f invDir({1 / ray.d[0], 1 / ray.d[1], 1 / ray.d[2]});	// 这个是为了计算做的简化。因为包围盒的面都是垂直轴的。
 		int32 dirIsNeg[3] = {invDir[0] < 0, invDir[1] < 0, invDir[2] < 0};
 
 		// 跟着ray穿过BVH的节点，找到与prim的交点。
@@ -225,7 +225,7 @@ namespace panda
 	{
 		if (!nodes) return false;
 
-		Vector3Df invDir({ 1 / ray.d[0], 1 / ray.d[1], 1 / ray.d[2] });	// 这个是为了计算做的简化。因为包围盒的面都是垂直轴的。
+		Vector3f invDir({ 1 / ray.d[0], 1 / ray.d[1], 1 / ray.d[2] });	// 这个是为了计算做的简化。因为包围盒的面都是垂直轴的。
 		int32 dirIsNeg[3] = { invDir[0] < 0, invDir[1] < 0, invDir[2] < 0 };
 
 		// 跟着ray穿过BVH的节点，找到与prim的交点。

@@ -1,18 +1,17 @@
 #pragma once
-#include "MathUtil.h"
-#include "Vector.hpp"
+#include <core/MathUtil.h>
 
 
-namespace panda
+namespace porte
 {
 	class Filter
 	{
 	public:
 		virtual ~Filter() {}
-		Filter(const Vector2Df& radius) : mRadius(radius), mInvRadius(Vector2Df{1.f / radius[0], 1.f / radius[1]}) {}
-		virtual float Evaluate(const Vector2Df& p) const  = 0;
+		Filter(const Vector2f& radius) : mRadius(radius), mInvRadius(Vector2f{1.f / radius[0], 1.f / radius[1]}) {}
+		virtual float Evaluate(const Vector2f& p) const  = 0;
 
-		const Vector2Df mRadius, mInvRadius;
+		const Vector2f mRadius, mInvRadius;
 	};
 
 	// Box Filter
@@ -20,8 +19,8 @@ namespace panda
 	{
 	public:
 		virtual ~BoxFilter() {}
-		BoxFilter(const Vector2Df& radius) : Filter(radius) {}
-		float Evaluate(const Vector2Df& p) const;
+		BoxFilter(const Vector2f& radius) : Filter(radius) {}
+		float Evaluate(const Vector2f& p) const;
 	};
 
 	Filter* CreateBoxFilter();
