@@ -46,6 +46,7 @@ add_library(porte STATIC
 set (ALL_PORTE_LIBS
 	porte
 	pugixml
+	tinyobjloader
 )
 
 
