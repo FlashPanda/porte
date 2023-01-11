@@ -16,6 +16,8 @@ include_directories(ext/drjit/ext/drjit-core/include)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+add_subdirectory(ext)
+
 FILE (GLOB PORTE_SOURCE
 	src/core/*
 	src/accelerators/*
@@ -43,9 +45,10 @@ add_library(porte STATIC
 
 set (ALL_PORTE_LIBS
 	porte
+	pugixml
 )
 
-add_subdirectory(ext)
+
 
 add_executable(porte_exe src/main/main.cpp)
 
