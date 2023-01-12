@@ -13,15 +13,4 @@ namespace porte
 
 		const Vector2f mRadius, mInvRadius;
 	};
-
-	// Box Filter
-	class BoxFilter : public Filter
-	{
-	public:
-		virtual ~BoxFilter() {}
-		BoxFilter(const Vector2f& radius) : Filter(radius) {}
-		float Evaluate(const Vector2f& p) const;
-	};
-
-	Filter* CreateBoxFilter();
 }

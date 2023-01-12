@@ -20,7 +20,7 @@ namespace porte
 		xyz[2] = 0.019334f * rgb[0] + 0.119193f * rgb[1] + 0.950227f * rgb[2];
 	}
 
-	Film::Film(const Vector2Di& resolution, Filter* filter) :
+	Film::Film(const Vector2i& resolution, Filter* filter) :
 		mFullResolution(resolution), mFilter(filter)
 	{
 		mPixelTiles = std::vector<FilmTilePixel>(std::max(0, resolution[0] * resolution[1]));
@@ -41,7 +41,7 @@ namespace porte
 
 	}
 
-	FilmTilePixel& Film::GetTilePixel(const Vector2Di& pt)
+	FilmTilePixel& Film::GetTilePixel(const Vector2i& pt)
 	{
 		int32 index = mFullResolution[0] * pt[1] + pt[0];
 		if (index >= mPixels.size())
@@ -50,7 +50,7 @@ namespace porte
 			return mPixelTiles[index];
 	}
 
-	Pixel& Film::GetPixel(const Vector2Di& pt)
+	Pixel& Film::GetPixel(const Vector2i& pt)
 	{
 		int32 index = mFullResolution[0] * pt[1] + pt[0];
 		if (index >= mPixels.size())
@@ -63,11 +63,11 @@ namespace porte
 	{
 		Vector2f pFilmDiscrete = pFilm - Vector2f({0.5f, 0.5f});
 		Vector2f p0f = Ceil(pFilmDiscrete - mFilter->mRadius);
-		Vector2Di p0({(int32)p0f.data[0], (int32)p0f.data[1]});
+		Vector2i p0({(int32)p0f.data[0], (int32)p0f.data[1]});
 		Vector2f p1f = Floor(pFilmDiscrete + mFilter->mRadius);
-		Vector2Di p1 = Vector2Di({(int32)p1f.data[0], (int32)p1f.data[1]}) + Vector2Di({1, 1});
+		Vector2i p1 = Vector2i({(int32)p1f.data[0], (int32)p1f.data[1]}) + Vector2i({1, 1});
 
-		p0 = Max(p0, Vector2Di({ 0, 0 }));
+		p0 = Max(p0, Vector2i({ 0, 0 }));
 		p1 = Min(p1, mFullResolution);
 
 		// 预计算x和y的滤波表偏移
@@ -93,7 +93,7 @@ namespace porte
 				float filterWeight = mFilterTable[offset];
 
 				// 更新像素值，用滤波后的样本贡献
-				FilmTilePixel& pixel = GetTilePixel(Vector2Di({x, y}));
+				FilmTilePixel& pixel = GetTilePixel(Vector2i({x, y}));
 				pixel.contribSum += L * sampleWeight * filterWeight;
 				pixel.filterWeightSum += filterWeight;
 			}
@@ -108,7 +108,7 @@ namespace porte
 		{
 			for (int32 x = 0; x < mFullResolution[0]; ++x)
 			{
-				Pixel& pt = GetPixel(Vector2Di({x, y}));
+				Pixel& pt = GetPixel(Vector2i({x, y}));
 				XYZToRGB(pt.xyz, &rgb[3 * offset]);
 
 				float filterWeightSum = pt.filterWeightSum;
@@ -128,7 +128,7 @@ namespace porte
 		porte::WriteImage(mFilename, &rgb[0], Bounds2i(), mFullResolution);
 	}
 
-	Film* CreateFilm(const Vector2Di& res, Filter* filter)
+	Film* CreateFilm(const Vector2i& res, Filter* filter)
 	{
 		return new Film(res, filter);
 	}

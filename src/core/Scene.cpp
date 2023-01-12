@@ -10,6 +10,8 @@
 #include <core/Primitive.h>
 #include <core/Light.h>
 #include <core/Film.h>
+#include <pugiconfig.hpp>
+#include <pugixml.hpp>
 
 /*
 * 经过验证，Maya中导出的usda场景，其中的transform是可以直接用的。也就是说，它也是row major的。

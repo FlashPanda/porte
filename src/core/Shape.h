@@ -31,35 +31,6 @@ namespace porte
 		const Matrix4f* WorldToObject;
 	};
 
-	class Triangle : public Shape
-	{
-	public:
 
-		Bounds3f ObjectBound() const;
-		Bounds3f WorldBound() const;
-
-		bool Intersect(const Ray& ray, float* tHit, SurfaceInteraction* isect) const;
-		bool IntersectP(const Ray& ray) const;
-
-		float Area() const;
-
-		Interaction Sample(const Vector2f& u, float* pdf) const;
-
-	private:
-		void GetUVs(Vector2f uv[3]) const 
-		{
-			if ()
-			{
-			}
-			else
-			{
-				uv[0] = Vector2f({ 0, 0 });
-				uv[1] = Vector2f({ 1, 0 });
-				uv[2] = Vector2f({ 1, 1 });
-			}
-		}
-
-		const int32* v;
-	};
 
 }

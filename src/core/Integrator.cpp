@@ -20,20 +20,20 @@ namespace porte
 		{
 			Film* ppFilm = pScene->mMainCamera->GetCamereObject()->mFilm;
 			// 需要采样的范围
-			Vector2Di sampleExtent = ppFilm->mFullResolution;
+			Vector2i sampleExtent = ppFilm->mFullResolution;
 			const int32 tileSize = 16;	// 采样块大小
-			Vector2Di nTiles({(sampleExtent[0] + tileSize - 1) / tileSize,
+			Vector2i nTiles({(sampleExtent[0] + tileSize - 1) / tileSize,
 				(sampleExtent[1] + tileSize - 1) / tileSize });	// 采样块数
 			
 			for (int32 y = 0; y < nTiles[1]; ++y)
 				for (int32 x = 0; x < nTiles[0]; ++x)
-					RenderTile([&](Vector2Di tile) {
+					RenderTile([&](Vector2i tile) {
 					int32 x0 = 0 + tile[0] * tileSize;
 					int32 x1 = std::min(x0 + tileSize, sampleExtent[0]);
 					int32 y0 = 0 + tile[1] * tileSize;
 					int32 y1 = std::min(y0 + tileSize, sampleExtent[1]);
-					Vector2Di boundMin({ x0, y0 });
-					Vector2Di boundMax({ x1, y1 });
+					Vector2i boundMin({ x0, y0 });
+					Vector2i boundMax({ x1, y1 });
 
 					// TODO：为了多线程，可以用FilmTile去做分割。
 
@@ -41,7 +41,7 @@ namespace porte
 					{
 						for (int32 j = y0; j < y1; ++j)
 						{
-							Vector2Di pixel({i, j});
+							Vector2i pixel({i, j});
 							// 像素位置（i，j）
 							mSampler->StartPixel(pixel);
 
@@ -82,12 +82,12 @@ namespace porte
 							}while (mSampler->StartNextSample());
 						}
 					}
-						}, Vector2Di({ x, y }));
+						}, Vector2i({ x, y }));
 
 			ppFilm->WriteImage();
 		}
 	}
-	void SamplerIntegrator::RenderTile(std::function<void(Vector2Di)> func, Vector2Di tile)
+	void SamplerIntegrator::RenderTile(std::function<void(Vector2i)> func, Vector2i tile)
 	{
 		func(tile);
 	}
@@ -111,85 +111,7 @@ namespace porte
 		return Vector3f(1.f);
 	}
 
-	DirectLightingIntegrator::DirectLightingIntegrator(LightStrategy strategy, int32 maxDepth) :
-		mStrategy(strategy), mMaxDepth(maxDepth)
-	{
-	}
 
-	DirectLightingIntegrator::~DirectLightingIntegrator() {}
 
-	void DirectLightingIntegrator::Render(const Scene* pScene)
-	{
 
-	}
-
-	Vector3f DirectLightingIntegrator::Li(const Ray& ray, const Scene& scene,
-		Sampler& sampler, int32 depth) const
-	{
-		return Vector3f(0.f);
-	}
-
-	DirectLightingIntegrator* CreateDirectLightingIntegrator(
-		LightStrategy strategy, int32 maxDepth,
-		std::shared_ptr<Sampler> sampler,
-		std::shared_ptr<SceneNodeCamera> camera)
-	{
-		DirectLightingIntegrator* pIt = new DirectLightingIntegrator(strategy, maxDepth);
-		pIt->SetSampler(sampler);
-		pIt->SetCamera(camera);
-
-		return pIt;
-	}
-
-	Vector3f WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
-		Sampler& sampler, int32 depth) const
-	{
-		Vector3f L(0.f);
-
-		SurfaceInteraction isect;
-		if (!scene.Intersect(ray, &isect))
-		{
-			for (auto iter : scene.mPbrtLights)
-			{
-				L += iter->Le(ray);
-			}
-			return L;
-		}
-
-		// 计算交点的发射光与反射光
-
-		// 初始化通用向量
-		const Vector3f n = isect.n;	// 法线
-		Vector3f wo = isect.wo;
-
-		// 计算交点的表面散射函数
-		isect.ComputeScatteringFunctions(ray);
-		// 体积计算
-		//if (!isect.bsdf)
-		//	return Li(isect.SpawnRay(ray.d), scene, sampler, depth);
-
-		// 计算交点的发射光
-		L += isect.Le(wo);
-
-		// 遍历每个光源，计算直接光照
-		for (const auto& iter : scene.mPbrtLights)
-		{
-			Vector3f wi;
-			float pdf;
-			VisibilityTester visibility;
-			Vector3f Li =
-				iter->Sample_Li(isect, sampler.Get2D(), &wi, &pdf, &visibility);
-
-			if (Li.IsBlack() || pdf == 0) continue;
-
-			Vector3f f = isect.bsdf->f(wo, wi);
-			if (!f.IsBlack() && visibility.Unoccluded(scene))
-				L += f * Li * AbsDotProduct(wi, n) / pdf;
-		}
-
-		// 追踪光滑表面的反射和折射
-		// TODO
-
-		return L;
-	}
 }
