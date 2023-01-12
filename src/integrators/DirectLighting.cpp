@@ -22,12 +22,9 @@ namespace porte
 
 	DirectLightingIntegrator* CreateDirectLightingIntegrator(
 		LightStrategy strategy, int32 maxDepth,
-		std::shared_ptr<Sampler> sampler,
-		std::shared_ptr<SceneNodeCamera> camera)
+		std::shared_ptr<Sampler> sampler,)
 	{
 		DirectLightingIntegrator* pIt = new DirectLightingIntegrator(strategy, maxDepth);
-		pIt->SetSampler(sampler);
-		pIt->SetCamera(camera);
 
 		return pIt;
 	}

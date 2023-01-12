@@ -7,6 +7,7 @@
 #include <drjit/quaternion.h>
 #include <drjit/matrix.h>
 #include <drjit/transform.h>
+#include <drjit/sphere.h>
 
 typedef int8_t		int8;
 typedef uint8_t		uint8;
@@ -156,7 +157,7 @@ namespace porte
 		Float tan = drjit::tan(drjit::deg_to_rad(xfov * .5f)),
 			cot = 1.f / tan;
 
-		Matrix4f trafo = drjit::diag(Vector4f(cot, aspect * cot, far * recip, 0.f);
+		Matrix4f trafo = drjit::diag(Vector4f(cot, aspect * cot, far * recip, 0.f));
 		trafo(2, 3) = near * far * recip;
 		trafo(3, 2) = -1;
 		return trafo;

@@ -5,6 +5,7 @@
 
 namespace porte
 {
+	struct CameraSample;
 	class Sampler
 	{
 	public:

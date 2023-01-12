@@ -12,6 +12,10 @@
 #include <core/Film.h>
 #include <pugiconfig.hpp>
 #include <pugixml.hpp>
+#include <integrators/DirectLighting.h>
+#include <accelerators/BVH.h>
+#include <filters/Box.h>
+#include <samplers/Random.h>
 
 /*
 * 经过验证，Maya中导出的usda场景，其中的transform是可以直接用的。也就是说，它也是row major的。
@@ -185,7 +189,7 @@ namespace porte
 				//	}
 				//}
 
-				mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, std::shared_ptr<Sampler>(mSampler));
+				//mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, std::shared_ptr<Sampler>(mSampler));
 			}
 			else
 			{
@@ -196,7 +200,7 @@ namespace porte
 		{
 			// 默认用Direct积分器
 			mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5,
-				std::shared_ptr<Sampler>(mSampler), mMainCamera);
+				std::shared_ptr<Sampler>(mSampler));
 		}
 	}
 
@@ -325,11 +329,6 @@ namespace porte
 			std::pair<std::string, Matrix4f> tPair = ParseXmlTransform(transformNode);
 			mat = tPair.second;
 		}
-		
-
-		pCamera->mNear = nearClip;
-		pCamera->mFar = farClip;
-		pNodeCamera->AppendTransform(mat);
 
 		// Filter
 		Filter* tFilter = nullptr;
@@ -356,11 +355,6 @@ namespace porte
 		{
 			tFilm = ParseXmlFilm(node, tFilter);
 		}
-		pCamera->mFilm = tFilm;
-
-		pNodeCamera->CalcTransforms();
-		mCameras.emplace(pCamera->Name(), pCamera);
-		mCameraNodes.emplace(pNodeCamera->Name(), pNodeCamera);
 	}
 
 	void Scene::ParseXmlShape(const pugi::xml_node& node)
@@ -398,8 +392,6 @@ namespace porte
 			}
 		}
 
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(shapeName);
-		std::shared_ptr<SceneNodeMesh> pNodeMesh = std::make_shared<SceneNodeMesh>(shapeName);
 
 		if (type == "obj" || type == "ply")
 		{
@@ -441,7 +433,7 @@ namespace porte
 				{
 					if (type == "obj")
 					{
-						ObjLoader(fullPaths[i], pMesh, pNodeMesh);
+						//ObjLoader(fullPaths[i], pMesh, pNodeMesh);
 					}
 					else if (type == "ply")
 					{
@@ -606,10 +598,10 @@ namespace porte
 			
 
 
-			pMesh->AddVertexArray(std::move(points));
-			pMesh->AddNormalArray(std::move(normals));
-			pMesh->AddUVArray(std::move(uvs));
-			pMesh->AddIndexArray(std::move(indices));
+			//pMesh->AddVertexArray(std::move(points));
+			//pMesh->AddNormalArray(std::move(normals));
+			//pMesh->AddUVArray(std::move(uvs));
+			//pMesh->AddIndexArray(std::move(indices));
 		}
 		else
 		{
@@ -621,13 +613,13 @@ namespace porte
 		if (transformNode.empty())
 		{
 			std::cout << "shape node has no transform. Set default to identical. " << std::endl;
-			Matrix4f mat; mat.SetIdentity();
-			pNodeMesh->AppendTransform(mat);
+			//Matrix4f mat; mat.SetIdentity();
+			//pNodeMesh->AppendTransform(mat);
 		}
 		else
 		{
 			std::pair<std::string, Matrix4f> tPair = ParseXmlTransform(transformNode);
-			pNodeMesh->AppendTransform(tPair.second);
+			//pNodeMesh->AppendTransform(tPair.second);
 		}
 
 		// 解析引用的材质名
@@ -651,21 +643,15 @@ namespace porte
 				matName = attrMat.as_string();
 			}
 		}
-		pMesh->SetMaterial(matName);
-		pNodeMesh->AddSceneObjectName(pMesh->Name());
-
-		mMeshes.emplace(pMesh->Name(), pMesh);
-		mMeshNodes.emplace(pNodeMesh->Name(), pNodeMesh);
 
 		// 创建Shape
-		pNodeMesh->CalculateTransform();
 		std::vector<std::shared_ptr<Shape>> tris;
-		int32 nTriangles = pMesh->GetTriangleCount();
+		int32 nTriangles = 0;//pMesh->GetTriangleCount();
 		tris.reserve(nTriangles);
-		for (int i = 0; i < nTriangles; ++i)
-			tris.push_back(std::make_shared<Triangle>(&(pNodeMesh->mCalculatedTransform), 
-				&(pNodeMesh->mInvCalculatedTransform),
-				pMesh, i));
+		//for (int i = 0; i < nTriangles; ++i)
+		//	tris.push_back(std::make_shared<Triangle>(&(pNodeMesh->mCalculatedTransform), 
+		//		&(pNodeMesh->mInvCalculatedTransform),
+		//		pMesh, i));
 
 		// 创建Primitive
 		std::vector<std::shared_ptr<Primitive>> prims;
@@ -706,15 +692,15 @@ namespace porte
 				Vector3f kd(0.f);
 				if (kdAttr.empty())
 				{
-					kd.Set(1.f);
+					//kd.Set(1.f);
 				}
 				else
 				{
 					kd = ParseVectorString(kdAttr.as_string());
 				}
 
-				std::shared_ptr<Material> pMaterial(CreateMatteMaterial(kd));
-				mBSDFMaterials.emplace(matName, pMaterial);
+				//std::shared_ptr<Material> pMaterial(CreateMatteMaterial(kd));
+				//mBSDFMaterials.emplace(matName, pMaterial);
 			}
 			else
 			{
@@ -757,7 +743,7 @@ namespace porte
 				if (posAttr.empty())
 				{
 					std::cout << "light node has no position attribute. Set default to origin. " << std::endl;
-					pos.Set(0.f);
+					//pos.Set(0.f);
 				}
 				else
 				{
@@ -770,7 +756,7 @@ namespace porte
 				if (colorAttr.empty())
 				{
 					std::cout << "light node has no color attribute. Set default to 1. " << std::endl;
-					color.Set(1.0f);
+					//color.Set(1.0f);
 				}
 				else
 				{
@@ -789,14 +775,7 @@ namespace porte
 					intensity = intensityAttr.as_float();
 				}
 
-				pLightPoint->mColor = Vector4f({ color[0], color[1], color[2], 1.f });
-				pLightPoint->mIntensity = intensity;
-				pNodeLight->AppendTransform(BuildTranslationMatrix(pos));
-
-				mLights.emplace(pLightPoint->Name(), pLightPoint);
-				mLightNodes.emplace(pNodeLight->Name(), pNodeLight);
-
-				mPbrtLights.push_back(CreatePointLight(BuildTranslationMatrix(pos), color, intensity));
+				//mPbrtLights.push_back(CreatePointLight(BuildTranslationMatrix(pos), color, intensity));
 			}
 		}
 	}
@@ -914,7 +893,7 @@ namespace porte
 					}
 					Vector3f up({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
-					Matrix4f mat = BuildViewMatrixRH(origin, lookat, up);
+					Matrix4f mat;//BuildViewMatrixRH(origin, lookat, up);
 					return std::pair<std::string, Matrix4f>(name.name(), mat);
 				}
 				else if (std::string(ch.name()) == "rotate")
@@ -929,7 +908,7 @@ namespace porte
 
 					attr = ch.attribute("angle");
 					float angle = attr.as_float();
-					matrixs.push_back(BuildRotationAxisAngle(vec, angle));
+					//matrixs.push_back(BuildRotationAxisAngle(vec, angle));
 				}
 				else if (std::string(ch.name()) == "translate")
 				{
@@ -941,7 +920,7 @@ namespace porte
 					float z = attr.as_float();
 					Vector3f vec({ x, y, z });
 
-					matrixs.push_back();
+					//matrixs.push_back();
 				}
 				else if (std::string(ch.name()) == "scale")
 				{
@@ -953,7 +932,7 @@ namespace porte
 					float z = attr.as_float();
 					Vector3f vec({ x, y, z });
 
-					matrixs.push_back(BuildScaleMatrix(vec));
+					//matrixs.push_back(BuildScaleMatrix(vec));
 				}
 				else if (std::string(ch.name()) == "matrix")
 				{
@@ -981,7 +960,7 @@ namespace porte
 			}
 
 			Matrix4f temp;
-			temp.SetIdentity();
+			//temp.SetIdentity();
 			for (int32 i = 0; i < matrixs.size(); ++i)
 			{
 				temp = temp * matrixs[i];
@@ -1016,7 +995,7 @@ namespace porte
 		if (mIntegrator == nullptr)
 		{
 			mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, 
-				std::shared_ptr<Sampler>(mSampler), mMainCamera);
+				std::shared_ptr<Sampler>(mSampler));
 		}
 	}
 

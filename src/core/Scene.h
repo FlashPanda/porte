@@ -15,7 +15,9 @@ namespace porte
 	class Ray;
 	class Primitive;
 	class Light;
-
+	class Material;
+	class Filter;
+	class Film;
 	class Scene
 	{
 		// 不需要add函数因为这本身就是一个public的结构

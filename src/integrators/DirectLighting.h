@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/Integrator.h>
+#include <memory>
 
 namespace porte
 {
@@ -30,6 +31,5 @@ namespace porte
 
 	DirectLightingIntegrator* CreateDirectLightingIntegrator(
 		LightStrategy strategy, int32 maxDepth,
-		std::shared_ptr<Sampler> sampler,
-		std::shared_ptr<SceneNodeCamera> camera);
+		std::shared_ptr<Sampler> sampler);
 }
