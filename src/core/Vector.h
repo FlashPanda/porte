@@ -120,7 +120,7 @@ namespace porte
 
 	/// 将 {a} 扩展成正交基 {a, b, c}
 	template <typename Vector3f> 
-	std::pair<Vector3f, Vector3f> coordinate_system(const Vector3f& n) {
+	std::pair<Vector3f, Vector3f> CoordinateSystem(const Vector3f& n) {
 		static_assert(Vector3f::Size == 3, "coordinate_system() expects a 3D vector as input!");
 
 		using Float = drjit::value_t<Vector3f>;
