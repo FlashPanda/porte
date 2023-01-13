@@ -3,6 +3,8 @@
 #pragma once
 #include <stdint.h>
 #include <cmath>
+#include <core/Vector.h>
+#include <core/Transform.h>
 #include <drjit/array.h>
 #include <drjit/quaternion.h>
 #include <drjit/matrix.h>

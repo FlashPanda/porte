@@ -1,10 +1,11 @@
 #include <lights/Point.h>
+#include <core/Sampling.h>
 
 namespace porte
 {
 	PointLight::PointLight(const Matrix4f& LocalToWorld, const Vector3f& I)
 		: Light((int32)LightFlags::DeltaPosition, LocalToWorld),
-		pLight(TransformPoint(Vector3f(0.f), LocalToWorld)),
+		pLight(LocalToWorld * Vector3f(0.f)),
 		I(I)
 	{
 	}
@@ -13,7 +14,7 @@ namespace porte
 		float* pdf, VisibilityTester* vis) const
 	{
 		// 点光源的sample很简单，方向，pdf值都简单
-		*wi = Normalize(pLight - ref.p);
+		*wi = drjit::normalize(pLight - ref.p);
 		*pdf = 1.f;
 		*vis = VisibilityTester(ref, Interaction(pLight));
 		return I / GetLengthSquare(pLight - ref.p);

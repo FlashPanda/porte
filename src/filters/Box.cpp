@@ -9,6 +9,6 @@ namespace porte
 
 	Filter* CreateBoxFilter()
 	{
-		return new BoxFilter(Vector2f({ 0.5f, 0.5f }));
+		return new BoxFilter(Vector2f(0.5f, 0.5f));
 	}
 }

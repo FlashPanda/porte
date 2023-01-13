@@ -1,8 +1,7 @@
 #include "Light.h"
 #include "Interaction.h"
-#include "Sampling.h"
-#include "Scene.h"
-#include "Transform.h"
+#include <core/Sampling.h>
+#include <core/Scene.h>
 
 namespace porte
 {
@@ -19,7 +18,7 @@ namespace porte
 		: flags(flags),
 		nSamples(std::max(1, nSamples)),
 		LocalToWorld(LocalToWorld),
-		WorldToLocal(InverseMatrix(LocalToWorld))
+		WorldToLocal(drjit::inverse(LocalToWorld))
 	{}
 
 	Light::~Light()
