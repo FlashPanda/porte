@@ -17,9 +17,7 @@
 #include <filters/Box.h>
 #include <samplers/Random.h>
 
-/*
-* 经过验证，Maya中导出的usda场景，其中的transform是可以直接用的。也就是说，它也是row major的。
-*/
+
 namespace porte
 {
 	void Scene::LoadSceneFromFile(std::string filename)
