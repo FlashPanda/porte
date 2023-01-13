@@ -1,2 +1,2 @@
 # porte
-panda's offline ray tracing engine
+**p**anda's **o**ffline **r**ay **t**racing **e**ngine
