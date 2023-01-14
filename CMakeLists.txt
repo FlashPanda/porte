@@ -15,8 +15,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_subdirectory(ext)
 
 include_directories(src)
-include_directories(ext/drjit/include)
-include_directories(ext/drjit/ext/drjit-core/include)
 include_directories(ext/pugixml/src)
 include_directories(ext)
 
@@ -50,8 +48,6 @@ set (ALL_PORTE_LIBS
 	pugixml
 	tinyobjloader
 )
-
-
 
 add_executable(porte_exe src/main/main.cpp)
 
