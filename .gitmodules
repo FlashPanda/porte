@@ -1,9 +1,3 @@
-[submodule "ext/drjit"]
-	path = ext/drjit
-	url = https://github.com/mitsuba-renderer/drjit.git
-[submodule "papers"]
-	path = papers
-	url = https://gitee.com/waterbright/papers.git
 [submodule "ext/pugixml"]
 	path = ext/pugixml
 	url = https://github.com/zeux/pugixml.git
