@@ -9,6 +9,6 @@ namespace porte
 
 	Vector2f RandomSampler::Get2D()
 	{
-		return Vector2f({ rng.UniformFloat(), rng.UniformFloat() });
+		return Vector2f(rng.UniformFloat(), rng.UniformFloat());
 	}
 }

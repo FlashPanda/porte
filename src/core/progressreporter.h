@@ -30,32 +30,56 @@
 
  */
 
+#if defined(_MSC_VER)
+#define NOMINMAX
+#pragma once
+#endif
 
-// core/memory.cpp*
-#include "memory.h"
+#ifndef PBRT_CORE_PROGRESSREPORTER_H
+#define PBRT_CORE_PROGRESSREPORTER_H
+
+// core/progressreporter.h*
+#include "pbrt.h"
+#include <atomic>
+#include <chrono>
+#include <thread>
 
 namespace pbrt {
 
-// Memory Allocation Functions
-void *AllocAligned(size_t size) {
-#if defined(PBRT_HAVE__ALIGNED_MALLOC)
-    return _aligned_malloc(size, PBRT_L1_CACHE_LINE_SIZE);
-#elif defined(PBRT_HAVE_POSIX_MEMALIGN)
-    void *ptr;
-    if (posix_memalign(&ptr, PBRT_L1_CACHE_LINE_SIZE, size) != 0) ptr = nullptr;
-    return ptr;
-#else
-    return memalign(PBRT_L1_CACHE_LINE_SIZE, size);
-#endif
-}
+// ProgressReporter Declarations
+class ProgressReporter {
+  public:
+    // ProgressReporter Public Methods
+    ProgressReporter(int64_t totalWork, const std::string &title);
+    ~ProgressReporter();
+    void Update(int64_t num = 1) {
+        if (num == 0 || PbrtOptions.quiet) return;
+        workDone += num;
+    }
+    Float ElapsedMS() const {
+        std::chrono::system_clock::time_point now =
+            std::chrono::system_clock::now();
+        int64_t elapsedMS =
+            std::chrono::duration_cast<std::chrono::milliseconds>(now -
+                                                                  startTime)
+                .count();
+        return (Float)elapsedMS;
+    }
+    void Done();
 
-void FreeAligned(void *ptr) {
-    if (!ptr) return;
-#if defined(PBRT_HAVE__ALIGNED_MALLOC)
-    _aligned_free(ptr);
-#else
-    free(ptr);
-#endif
-}
+  private:
+    // ProgressReporter Private Methods
+    void PrintBar();
+
+    // ProgressReporter Private Data
+    const int64_t totalWork;
+    const std::string title;
+    const std::chrono::system_clock::time_point startTime;
+    std::atomic<int64_t> workDone;
+    std::atomic<bool> exitThread;
+    std::thread updateThread;
+};
 
 }  // namespace pbrt
+
+#endif  // PBRT_CORE_PROGRESSREPORTER_H

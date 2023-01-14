@@ -1,4 +1,9 @@
 #include <integrators/Whitted.h>
+#include <core/Sampler.h>
+#include <core/Interaction.h>
+#include <core/Light.h>
+#include <core/Scene.h>
+#include <core/Camera.h>
 
 namespace porte
 {
@@ -10,7 +15,7 @@ namespace porte
 		SurfaceInteraction isect;
 		if (!scene.Intersect(ray, &isect))
 		{
-			for (auto iter : scene.mPbrtLights)
+			for (auto iter : scene.mLights)
 			{
 				L += iter->Le(ray);
 			}
@@ -33,7 +38,7 @@ namespace porte
 		L += isect.Le(wo);
 
 		// 遍历每个光源，计算直接光照
-		for (const auto& iter : scene.mPbrtLights)
+		for (const auto& iter : scene.mLights)
 		{
 			Vector3f wi;
 			float pdf;
@@ -41,16 +46,23 @@ namespace porte
 			Vector3f Li =
 				iter->Sample_Li(isect, sampler.Get2D(), &wi, &pdf, &visibility);
 
-			if (Li.IsBlack() || pdf == 0) continue;
+			if (Li == Vector3f(0.f) || pdf == 0) continue;
 
 			Vector3f f = isect.bsdf->f(wo, wi);
-			if (!f.IsBlack() && visibility.Unoccluded(scene))
-				L += f * Li * AbsDotProduct(wi, n) / pdf;
+			if (!(f == Vector3f(0.f)) && visibility.Unoccluded(scene))
+				L += f * Li * drjit::abs_dot(wi, n) / pdf;
+				
 		}
 
 		// 追踪光滑表面的反射和折射
 		// TODO
 
 		return L;
+	}
+
+	WhittedIntegrator* CreateWhittedIntegrator(std::shared_ptr<Sampler> sampler,
+		std::shared_ptr<const Camera> camera)
+	{
+		return new WhittedIntegrator();
 	}
 }
