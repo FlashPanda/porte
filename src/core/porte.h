@@ -32,37 +32,37 @@
 
 // Platform-specific definitions
 #if defined(_WIN32) || defined(_WIN64)
-  #define PBRT_IS_WINDOWS
+  #define PORTE_IS_WINDOWS
 #endif
 
 #if defined(_MSC_VER)
-  #define PBRT_IS_MSVC
+  #define PORTE_IS_MSVC
   #if _MSC_VER == 1800
     #define snprintf _snprintf
   #endif
 #endif
 
-#ifndef PBRT_L1_CACHE_LINE_SIZE
-  #define PBRT_L1_CACHE_LINE_SIZE 64
+#ifndef PORTE_L1_CACHE_LINE_SIZE
+  #define PORTE_L1_CACHE_LINE_SIZE 64
 #endif
 
 #include <stdint.h>
-#if defined(PBRT_IS_MSVC)
+#if defined(PORTE_IS_MSVC)
 #include <float.h>
 #include <intrin.h>
-#pragma warning(disable : 4305)  // double constant assigned to float
-#pragma warning(disable : 4244)  // int -> float conversion
-#pragma warning(disable : 4843)  // double -> float conversion
+#pragma warning(disable : 4305)  // double常量赋值给float
+#pragma warning(disable : 4244)  // int -> float 转换
+#pragma warning(disable : 4843)  // double -> float 转换
 #pragma warning(disable : 4267)  // size_t -> int
-#pragma warning(disable : 4838)  // another double -> int
+#pragma warning(disable : 4838)  // double -> int
 #endif
 
-// Global Macros
+// 全局宏
 #define ALLOCA(TYPE, COUNT) (TYPE *) alloca((COUNT) * sizeof(TYPE))
 
-namespace pbrt {
+namespace porte {
 
-// Global Forward Declarations
+// 全局前置声明
 class Scene;
 class Integrator;
 class SamplerIntegrator;
@@ -93,7 +93,7 @@ template <int nSpectrumSamples>
 class CoefficientSpectrum;
 class RGBSpectrum;
 class SampledSpectrum;
-#ifdef PBRT_SAMPLED_SPECTRUM
+#ifdef PORTE_SAMPLED_SPECTRUM
   typedef SampledSpectrum Spectrum;
 #else
   typedef RGBSpectrum Spectrum;
@@ -124,11 +124,11 @@ class VisibilityTester;
 class AreaLight;
 struct Distribution1D;
 class Distribution2D;
-#ifdef PBRT_FLOAT_AS_DOUBLE
+#ifdef PORTE_FLOAT_AS_DOUBLE
   typedef double Float;
 #else
   typedef float Float;
-#endif  // PBRT_FLOAT_AS_DOUBLE
+#endif  // PORTE_FLOAT_AS_DOUBLE
 class RNG;
 class ProgressReporter;
 class MemoryArena;
@@ -157,33 +157,33 @@ struct Options {
 extern Options PbrtOptions;
 class TextureParams;
 
-// Global Constants
+// 全局常数
 #ifdef _MSC_VER
 #define MaxFloat std::numeric_limits<Float>::max()
 #define Infinity std::numeric_limits<Float>::infinity()
 #else
-static PBRT_CONSTEXPR Float MaxFloat = std::numeric_limits<Float>::max();
-static PBRT_CONSTEXPR Float Infinity = std::numeric_limits<Float>::infinity();
+static constexpr Float MaxFloat = std::numeric_limits<Float>::max();
+static constexpr Float Infinity = std::numeric_limits<Float>::infinity();
 #endif
 #ifdef _MSC_VER
 #define MachineEpsilon (std::numeric_limits<Float>::epsilon() * 0.5)
 #else
-static PBRT_CONSTEXPR Float MachineEpsilon =
+static constexpr Float MachineEpsilon =
     std::numeric_limits<Float>::epsilon() * 0.5;
 #endif
-static PBRT_CONSTEXPR Float ShadowEpsilon = 0.0001f;
-static PBRT_CONSTEXPR Float Pi = 3.14159265358979323846;
-static PBRT_CONSTEXPR Float InvPi = 0.31830988618379067154;
-static PBRT_CONSTEXPR Float Inv2Pi = 0.15915494309189533577;
-static PBRT_CONSTEXPR Float Inv4Pi = 0.07957747154594766788;
-static PBRT_CONSTEXPR Float PiOver2 = 1.57079632679489661923;
-static PBRT_CONSTEXPR Float PiOver4 = 0.78539816339744830961;
-static PBRT_CONSTEXPR Float Sqrt2 = 1.41421356237309504880;
-#if defined(PBRT_IS_MSVC)
+static constexpr Float ShadowEpsilon = 0.0001f;
+static constexpr Float Pi = 3.14159265358979323846;
+static constexpr Float InvPi = 0.31830988618379067154;
+static constexpr Float Inv2Pi = 0.15915494309189533577;
+static constexpr Float Inv4Pi = 0.07957747154594766788;
+static constexpr Float PiOver2 = 1.57079632679489661923;
+static constexpr Float PiOver4 = 0.78539816339744830961;
+static constexpr Float Sqrt2 = 1.41421356237309504880;
+#if defined(PORTE_IS_MSVC)
 #define alloca _alloca
 #endif
 
-// Global Inline Functions
+// 全局函数
 inline uint32_t FloatToBits(float f) {
     uint32_t ui;
     memcpy(&ui, &f, sizeof(float));

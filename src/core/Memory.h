@@ -1,51 +1,17 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_MEMORY_H
-#define PBRT_CORE_MEMORY_H
+#ifndef PORTE_CORE_MEMORY_H
+#define PORTE_CORE_MEMORY_H
 
-// core/memory.h*
-#include "pbrt.h"
+#include <core/porte.h>
 #include <list>
 #include <cstddef>
 
-namespace pbrt {
+namespace porte {
 
-// Memory Declarations
 #define ARENA_ALLOC(arena, Type) new ((arena).Alloc(sizeof(Type))) Type
 void *AllocAligned(size_t size);
 template <typename T>
@@ -55,12 +21,9 @@ T *AllocAligned(size_t count) {
 
 void FreeAligned(void *);
 class
-#ifdef PBRT_HAVE_ALIGNAS
-alignas(PBRT_L1_CACHE_LINE_SIZE)
-#endif // PBRT_HAVE_ALIGNAS
+alignas(PORTE_L1_CACHE_LINE_SIZE)
     MemoryArena {
   public:
-    // MemoryArena Public Methods
     MemoryArena(size_t blockSize = 262144) : blockSize(blockSize) {}
     ~MemoryArena() {
         FreeAligned(currentBlock);
@@ -68,21 +31,12 @@ alignas(PBRT_L1_CACHE_LINE_SIZE)
         for (auto &block : availableBlocks) FreeAligned(block.second);
     }
     void *Alloc(size_t nBytes) {
-        // Round up _nBytes_ to minimum machine alignment
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 9
-        // gcc bug: max_align_t wasn't in std:: until 4.9.0
-        const int align = alignof(::max_align_t);
-#elif !defined(PBRT_HAVE_ALIGNOF)
-        const int align = 16;
-#else
+        // 将nBytes截取到最小的机器对齐字节
         const int align = alignof(std::max_align_t);
-#endif
-#ifdef PBRT_HAVE_CONSTEXPR
         static_assert(IsPowerOf2(align), "Minimum alignment not a power of two");
-#endif
         nBytes = (nBytes + align - 1) & ~(align - 1);
         if (currentBlockPos + nBytes > currentAllocSize) {
-            // Add current block to _usedBlocks_ list
+            // 将当前block加入到usedBlocks列表
             if (currentBlock) {
                 usedBlocks.push_back(
                     std::make_pair(currentAllocSize, currentBlock));
@@ -90,9 +44,9 @@ alignas(PBRT_L1_CACHE_LINE_SIZE)
                 currentAllocSize = 0;
             }
 
-            // Get new block of memory for _MemoryArena_
+            // 获取一个新的内存block
 
-            // Try to get memory block from _availableBlocks_
+            // 尝试从avaliableBlocks中获取内存block
             for (auto iter = availableBlocks.begin();
                  iter != availableBlocks.end(); ++iter) {
                 if (iter->first >= nBytes) {
@@ -133,7 +87,6 @@ alignas(PBRT_L1_CACHE_LINE_SIZE)
   private:
     MemoryArena(const MemoryArena &) = delete;
     MemoryArena &operator=(const MemoryArena &) = delete;
-    // MemoryArena Private Data
     const size_t blockSize;
     size_t currentBlockPos = 0, currentAllocSize = 0;
     uint8_t *currentBlock = nullptr;
@@ -143,7 +96,6 @@ alignas(PBRT_L1_CACHE_LINE_SIZE)
 template <typename T, int logBlockSize>
 class BlockedArray {
   public:
-    // BlockedArray Public Methods
     BlockedArray(int uRes, int vRes, const T *d = nullptr)
         : uRes(uRes), vRes(vRes), uBlocks(RoundUp(uRes) >> logBlockSize) {
         int nAlloc = RoundUp(uRes) * RoundUp(vRes);
@@ -153,7 +105,7 @@ class BlockedArray {
             for (int v = 0; v < vRes; ++v)
                 for (int u = 0; u < uRes; ++u) (*this)(u, v) = d[v * uRes + u];
     }
-    PBRT_CONSTEXPR int BlockSize() const { return 1 << logBlockSize; }
+    constexpr int BlockSize() const { return 1 << logBlockSize; }
     int RoundUp(int x) const {
         return (x + BlockSize() - 1) & ~(BlockSize() - 1);
     }
@@ -185,11 +137,10 @@ class BlockedArray {
     }
 
   private:
-    // BlockedArray Private Data
     T *data;
     const int uRes, vRes, uBlocks;
 };
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_MEMORY_H
+#endif  // PORTE_CORE_MEMORY_H
