@@ -1,58 +1,24 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_STATS_H
-#define PBRT_CORE_STATS_H
+#ifndef PORTE_CORE_STATS_H
+#define PORTE_CORE_STATS_H
 
-// core/stats.h*
-#include "pbrt.h"
+#include <core/porte.h>
 #include <map>
 #include <chrono>
 #include <string>
 #include <functional>
 #include <mutex>
 
-namespace pbrt {
+namespace porte {
 
-// Statistics Declarations
 class StatsAccumulator;
 class StatRegisterer {
-  public:
-    // StatRegisterer Public Methods
+public:
+    
     StatRegisterer(std::function<void(StatsAccumulator &)> func) {
         static std::mutex mutex;
         std::lock_guard<std::mutex> lock(mutex);
@@ -62,8 +28,7 @@ class StatRegisterer {
     }
     static void CallCallbacks(StatsAccumulator &accum);
 
-  private:
-    // StatRegisterer Private Data
+private:
     static std::vector<std::function<void(StatsAccumulator &)>> *funcs;
 };
 
@@ -73,7 +38,6 @@ void ReportThreadStats();
 
 class StatsAccumulator {
   public:
-    // StatsAccumulator Public Methods
     void ReportCounter(const std::string &name, int64_t val) {
         counters[name] += val;
     }
@@ -123,7 +87,6 @@ class StatsAccumulator {
     void Clear();
 
   private:
-    // StatsAccumulator Private Data
     std::map<std::string, int64_t> counters;
     std::map<std::string, int64_t> memoryCounters;
     std::map<std::string, int64_t> intDistributionSums;
@@ -247,7 +210,7 @@ static_assert((int)Prof::NumProfCategories ==
               "ProfNames[] array and Prof enumerant have different "
               "numbers of entries!");
 
-extern PBRT_THREAD_LOCAL uint64_t ProfilerState;
+extern thread_local uint64_t ProfilerState;
 inline uint64_t CurrentProfilerState() { return ProfilerState; }
 
 class ProfilePhase {
@@ -280,37 +243,31 @@ void CleanupProfiler();
 
 // Statistics Macros
 #define STAT_COUNTER(title, var)                           \
-    static PBRT_THREAD_LOCAL int64_t var;                  \
+    static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
         accum.ReportCounter(title, var);                   \
         var = 0;                                           \
     }                                                      \
     static StatRegisterer STATS_REG##var(STATS_FUNC##var)
 #define STAT_MEMORY_COUNTER(title, var)                    \
-    static PBRT_THREAD_LOCAL int64_t var;                  \
+    static thread_local int64_t var;                  \
     static void STATS_FUNC##var(StatsAccumulator &accum) { \
         accum.ReportMemoryCounter(title, var);             \
         var = 0;                                           \
     }                                                      \
     static StatRegisterer STATS_REG##var(STATS_FUNC##var)
 
-#ifndef PBRT_HAVE_CONSTEXPR
-#define STATS_INT64_T_MIN LLONG_MAX
-#define STATS_INT64_T_MAX _I64_MIN
-#define STATS_DBL_T_MIN DBL_MAX
-#define STATS_DBL_T_MAX -DBL_MAX
-#else
+
 #define STATS_INT64_T_MIN std::numeric_limits<int64_t>::max()
 #define STATS_INT64_T_MAX std::numeric_limits<int64_t>::lowest()
 #define STATS_DBL_T_MIN std::numeric_limits<double>::max()
 #define STATS_DBL_T_MAX std::numeric_limits<double>::lowest()
-#endif
 
 #define STAT_INT_DISTRIBUTION(title, var)                                  \
-    static PBRT_THREAD_LOCAL int64_t var##sum;                             \
-    static PBRT_THREAD_LOCAL int64_t var##count;                           \
-    static PBRT_THREAD_LOCAL int64_t var##min = (STATS_INT64_T_MIN);       \
-    static PBRT_THREAD_LOCAL int64_t var##max = (STATS_INT64_T_MAX);       \
+    static thread_local int64_t var##sum;                             \
+    static thread_local int64_t var##count;                           \
+    static thread_local int64_t var##min = (STATS_INT64_T_MIN);       \
+    static thread_local int64_t var##max = (STATS_INT64_T_MAX);       \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                 \
         accum.ReportIntDistribution(title, var##sum, var##count, var##min, \
                                     var##max);                             \
@@ -322,10 +279,10 @@ void CleanupProfiler();
     static StatRegisterer STATS_REG##var(STATS_FUNC##var)
 
 #define STAT_FLOAT_DISTRIBUTION(title, var)                                  \
-    static PBRT_THREAD_LOCAL double var##sum;                                \
-    static PBRT_THREAD_LOCAL int64_t var##count;                             \
-    static PBRT_THREAD_LOCAL double var##min = (STATS_DBL_T_MIN);            \
-    static PBRT_THREAD_LOCAL double var##max = (STATS_DBL_T_MAX);            \
+    static thread_local double var##sum;                                \
+    static thread_local int64_t var##count;                             \
+    static thread_local double var##min = (STATS_DBL_T_MIN);            \
+    static thread_local double var##max = (STATS_DBL_T_MAX);            \
     static void STATS_FUNC##var(StatsAccumulator &accum) {                   \
         accum.ReportFloatDistribution(title, var##sum, var##count, var##min, \
                                       var##max);                             \
@@ -345,7 +302,7 @@ void CleanupProfiler();
     } while (0)
 
 #define STAT_PERCENT(title, numVar, denomVar)                 \
-    static PBRT_THREAD_LOCAL int64_t numVar, denomVar;        \
+    static thread_local int64_t numVar, denomVar;        \
     static void STATS_FUNC##numVar(StatsAccumulator &accum) { \
         accum.ReportPercentage(title, numVar, denomVar);      \
         numVar = denomVar = 0;                                \
@@ -353,13 +310,13 @@ void CleanupProfiler();
     static StatRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
 
 #define STAT_RATIO(title, numVar, denomVar)                   \
-    static PBRT_THREAD_LOCAL int64_t numVar, denomVar;        \
+    static thread_local int64_t numVar, denomVar;        \
     static void STATS_FUNC##numVar(StatsAccumulator &accum) { \
         accum.ReportRatio(title, numVar, denomVar);           \
         numVar = denomVar = 0;                                \
     }                                                         \
     static StatRegisterer STATS_REG##numVar(STATS_FUNC##numVar)
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_STATS_H
+#endif  // PORTE_CORE_STATS_H

@@ -1,9 +1,9 @@
 
 #include <core/error.h>
 #include <core/StringPrint.h>
-//#include <core/parallel.h>
-//#include "progressreporter.h"
-//#include "parser.h"
+#include <core/parallel.h>
+#include <core/progressreporter.h>
+#include <core/parser.h>
 
 #include <mutex>
 #include <condition_variable>

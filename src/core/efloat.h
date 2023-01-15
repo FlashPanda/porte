@@ -1,84 +1,46 @@
 
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_EFLOAT_H
-#define PBRT_CORE_EFLOAT_H
+#ifndef PORTE_CORE_EFLOAT_H
+#define PORTE_CORE_EFLOAT_H
 
 // core/efloat.h*
-#include "pbrt.h"
-#include "stringprint.h"
+#include <core/porte.h>
+#include <core/StringPrint.h>
 
-namespace pbrt {
+namespace porte {
 
-// EFloat Declarations
 class EFloat {
-  public:
-    // EFloat Public Methods
+public:
     EFloat() {}
     EFloat(float v, float err = 0.f) : v(v) {
         if (err == 0.)
             low = high = v;
         else {
-            // Compute conservative bounds by rounding the endpoints away
-            // from the middle. Note that this will be over-conservative in
-            // cases where v-err or v+err are exactly representable in
-            // floating-point, but it's probably not worth the trouble of
-            // checking this case.
+            // 保守边界。可能过于保守。
             low = NextFloatDown(v - err);
             high = NextFloatUp(v + err);
         }
-// Store high precision reference value in _EFloat_
-#ifndef NDEBUG
+
+        // 保存高精度引用值。
         vPrecise = v;
         Check();
-#endif  // NDEBUG
     }
-#ifndef NDEBUG
+
     EFloat(float v, long double lD, float err) : EFloat(v, err) {
         vPrecise = lD;
         Check();
     }
-#endif  // DEBUG
+
     EFloat operator+(EFloat ef) const {
         EFloat r;
         r.v = v + ef.v;
-#ifndef NDEBUG
+
         r.vPrecise = vPrecise + ef.vPrecise;
-#endif  // DEBUG
+
         // Interval arithemetic addition, with the result rounded away from
         // the value r.v in order to be conservative.
         r.low = NextFloatDown(LowerBound() + ef.LowerBound());
@@ -91,18 +53,17 @@ class EFloat {
     float GetAbsoluteError() const { return high - low; }
     float UpperBound() const { return high; }
     float LowerBound() const { return low; }
-#ifndef NDEBUG
+
     float GetRelativeError() const {
         return std::abs((vPrecise - v) / vPrecise);
     }
-    long double PreciseValue() const { return vPrecise; }
-#endif
+
     EFloat operator-(EFloat ef) const {
         EFloat r;
         r.v = v - ef.v;
-#ifndef NDEBUG
+
         r.vPrecise = vPrecise - ef.vPrecise;
-#endif
+
         r.low = NextFloatDown(LowerBound() - ef.UpperBound());
         r.high = NextFloatUp(UpperBound() - ef.LowerBound());
         r.Check();
@@ -111,9 +72,9 @@ class EFloat {
     EFloat operator*(EFloat ef) const {
         EFloat r;
         r.v = v * ef.v;
-#ifndef NDEBUG
+
         r.vPrecise = vPrecise * ef.vPrecise;
-#endif
+
         Float prod[4] = {
             LowerBound() * ef.LowerBound(), UpperBound() * ef.LowerBound(),
             LowerBound() * ef.UpperBound(), UpperBound() * ef.UpperBound()};
@@ -127,12 +88,11 @@ class EFloat {
     EFloat operator/(EFloat ef) const {
         EFloat r;
         r.v = v / ef.v;
-#ifndef NDEBUG
+
         r.vPrecise = vPrecise / ef.vPrecise;
-#endif
+
         if (ef.low < 0 && ef.high > 0) {
-            // Bah. The interval we're dividing by straddles zero, so just
-            // return an interval of everything.
+            // 跨0错误
             r.low = -Infinity;
             r.high = Infinity;
         } else {
@@ -150,9 +110,9 @@ class EFloat {
     EFloat operator-() const {
         EFloat r;
         r.v = -v;
-#ifndef NDEBUG
+
         r.vPrecise = -vPrecise;
-#endif
+
         r.low = -high;
         r.high = -low;
         r.Check();
@@ -163,21 +123,21 @@ class EFloat {
         if (!std::isinf(low) && !std::isnan(low) && !std::isinf(high) &&
             !std::isnan(high))
             CHECK_LE(low, high);
-#ifndef NDEBUG
+
         if (!std::isinf(v) && !std::isnan(v)) {
             CHECK_LE(LowerBound(), vPrecise);
             CHECK_LE(vPrecise, UpperBound());
         }
-#endif
+
     }
     EFloat(const EFloat &ef) {
         ef.Check();
         v = ef.v;
         low = ef.low;
         high = ef.high;
-#ifndef NDEBUG
+
         vPrecise = ef.vPrecise;
-#endif
+
     }
     EFloat &operator=(const EFloat &ef) {
         ef.Check();
@@ -185,9 +145,9 @@ class EFloat {
             v = ef.v;
             low = ef.low;
             high = ef.high;
-#ifndef NDEBUG
+
             vPrecise = ef.vPrecise;
-#endif
+
         }
         return *this;
     }
@@ -195,25 +155,25 @@ class EFloat {
     friend std::ostream &operator<<(std::ostream &os, const EFloat &ef) {
         os << StringPrintf("v=%f (%a) - [%f, %f]",
                            ef.v, ef.v, ef.low, ef.high);
-#ifndef NDEBUG
+
         os << StringPrintf(", precise=%.30Lf", ef.vPrecise);
-#endif // !NDEBUG
+
         return os;
     }
 
   private:
-    // EFloat Private Data
+
     float v, low, high;
-#ifndef NDEBUG
+
     long double vPrecise;
-#endif  // NDEBUG
+
     friend inline EFloat sqrt(EFloat fe);
     friend inline EFloat abs(EFloat fe);
     friend inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0,
                                  EFloat *t1);
 };
 
-// EFloat Inline Functions
+
 inline EFloat operator*(float f, EFloat fe) { return EFloat(f) * fe; }
 
 inline EFloat operator/(float f, EFloat fe) { return EFloat(f) / fe; }
@@ -225,9 +185,9 @@ inline EFloat operator-(float f, EFloat fe) { return EFloat(f) - fe; }
 inline EFloat sqrt(EFloat fe) {
     EFloat r;
     r.v = std::sqrt(fe.v);
-#ifndef NDEBUG
+
     r.vPrecise = std::sqrt(fe.vPrecise);
-#endif
+
     r.low = NextFloatDown(std::sqrt(fe.low));
     r.high = NextFloatUp(std::sqrt(fe.high));
     r.Check();
@@ -236,26 +196,20 @@ inline EFloat sqrt(EFloat fe) {
 
 inline EFloat abs(EFloat fe) {
     if (fe.low >= 0)
-        // The entire interval is greater than zero, so we're all set.
         return fe;
     else if (fe.high <= 0) {
-        // The entire interval is less than zero.
         EFloat r;
         r.v = -fe.v;
-#ifndef NDEBUG
         r.vPrecise = -fe.vPrecise;
-#endif
         r.low = -fe.high;
         r.high = -fe.low;
         r.Check();
         return r;
     } else {
-        // The interval straddles zero.
+       
         EFloat r;
         r.v = std::abs(fe.v);
-#ifndef NDEBUG
         r.vPrecise = std::abs(fe.vPrecise);
-#endif
         r.low = 0;
         r.high = std::max(-fe.low, fe.high);
         r.Check();
@@ -265,14 +219,14 @@ inline EFloat abs(EFloat fe) {
 
 inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1);
 inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
-    // Find quadratic discriminant
+    // 二次判别式
     double discrim = (double)B.v * (double)B.v - 4. * (double)A.v * (double)C.v;
     if (discrim < 0.) return false;
     double rootDiscrim = std::sqrt(discrim);
 
     EFloat floatRootDiscrim(rootDiscrim, MachineEpsilon * rootDiscrim);
 
-    // Compute quadratic _t_ values
+    // 计算二次项t的值
     EFloat q;
     if ((float)B < 0)
         q = -.5 * (B - floatRootDiscrim);
@@ -284,6 +238,6 @@ inline bool Quadratic(EFloat A, EFloat B, EFloat C, EFloat *t0, EFloat *t1) {
     return true;
 }
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_EFLOAT_H
+#endif  // PORTE_CORE_EFLOAT_H

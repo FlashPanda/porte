@@ -1,60 +1,22 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_STRINGPRINT_H
-#define PBRT_CORE_STRINGPRINT_H
+#ifndef PORTE_CORE_STRINGPRINT_H
+#define PORTE_CORE_STRINGPRINT_H
 
-#include "pbrt.h"
+#include <core/porte.h>
 #include <stdio.h>
 #include <string>
 #include <string.h>
 #include <inttypes.h>
 
-#ifdef __GNUG__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
-#endif  // __GNUG__
-
 namespace pbrt {
 
 inline void stringPrintfRecursive(std::string *s, const char *fmt) {
     const char *c = fmt;
-    // No args left; make sure there aren't any extra formatting
-    // specifiers.
+ 
     while (*c) {
         if (*c == '%') {
             CHECK_EQ(c[1], '%');
@@ -64,9 +26,8 @@ inline void stringPrintfRecursive(std::string *s, const char *fmt) {
     }
 }
 
-// 1. Copy from fmt to *s, up to the next formatting directive.
-// 2. Advance fmt past the next formatting directive and return the
-//    formatting directive as a string.
+// 1. 从 fmt 复制到 *s，直到下一个格式化指令。
+// 2. 将 fmt 推进到下一个格式化指令之后，并将格式化指令作为字符串返回。
 inline std::string copyToFormatString(const char **fmt_ptr, std::string *s) {
     const char *&fmt = *fmt_ptr;
     while (*fmt) {
@@ -74,12 +35,12 @@ inline std::string copyToFormatString(const char **fmt_ptr, std::string *s) {
             *s += *fmt;
             ++fmt;
         } else if (fmt[1] == '%') {
-            // "%%"; let it pass through
+            // "%%"; 让其通过
             *s += '%';
             *s += '%';
             fmt += 2;
         } else
-            // fmt is at the start of a formatting directive.
+            // fmt位于格式化指令的开头
             break;
     }
 
@@ -88,9 +49,7 @@ inline std::string copyToFormatString(const char **fmt_ptr, std::string *s) {
         do {
             nextFmt += *fmt;
             ++fmt;
-            // Incomplete (but good enough?) test for the end of the
-            // formatting directive: a new formatting directive starts, we
-            // hit whitespace, or we hit a comma.
+            // 格式化指令的不完整测试：一个新的格式化指令开始，我们点击空格，或者我们点击逗号。
         } while (*fmt && *fmt != '%' && !isspace(*fmt) && *fmt != ',' &&
                  *fmt != '[' && *fmt != ']' && *fmt != '(' && *fmt != ')');
     }
@@ -100,19 +59,17 @@ inline std::string copyToFormatString(const char **fmt_ptr, std::string *s) {
 
 template <typename T>
 inline std::string formatOne(const char *fmt, T v) {
-    // Figure out how much space we need to allocate; add an extra
-    // character for the '\0'.
+    // 算出需要分配多少空间，包括最后一个'\0'
     size_t size = snprintf(nullptr, 0, fmt, v) + 1;
     std::string str;
     str.resize(size);
     snprintf(&str[0], size, fmt, v);
-    str.pop_back();  // remove trailing NUL
+    str.pop_back();  // 移除尾部的NUL
     return str;
 }
 
-// General-purpose version of stringPrintfRecursive; add the formatted
-// output for a single StringPrintf() argument to the final result string
-// in *s.
+// 通用版的stringPrintfRecursive；
+// 将单个 StringPrintf() 参数的格式化输出添加到最终结果字符串*s 中。
 template <typename T, typename... Args>
 inline void stringPrintfRecursive(std::string *s, const char *fmt, T v,
                                   Args... args) {
@@ -121,29 +78,24 @@ inline void stringPrintfRecursive(std::string *s, const char *fmt, T v,
     stringPrintfRecursive(s, fmt, args...);
 }
 
-// Special case of StringPrintRecursive for float-valued arguments.
+// 特化版本，浮点参数
 template <typename... Args>
 inline void stringPrintfRecursive(std::string *s, const char *fmt, float v,
                                   Args... args) {
     std::string nextFmt = copyToFormatString(&fmt, s);
     if (nextFmt == "%f")
-        // Always use enough precision so that the printed value gives
-        // the exact floating-point value if it's used to initialize a
-        // float.
+        // 用足够的精度给出精确的浮点值，如果它是用来初始化一个float
         // https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
         *s += formatOne("%.9g", v);
     else
-        // If a specific formatting string other than "%f" was specified,
-        // just use that.
+        // 如果不是用的"%f"，那么保留它
         *s += formatOne(nextFmt.c_str(), v);
 
-    // Go forth and print the next arg.
+    // 继续打印下一个参数
     stringPrintfRecursive(s, fmt, args...);
 }
 
-// Specialization for doubles that always uses enough precision.  (It seems
-// that this is the version that is actually called for floats.  I thought
-// that float->double promotion wasn't supposed to happen in this case?)
+// 使用足够的精度来特化double
 template <typename... Args>
 inline void stringPrintfRecursive(std::string *s, const char *fmt, double v,
                                   Args... args) {
@@ -155,13 +107,10 @@ inline void stringPrintfRecursive(std::string *s, const char *fmt, double v,
     stringPrintfRecursive(s, fmt, args...);
 }
 
-// StringPrintf() is a replacement for sprintf() (and the like) that
-// returns the result as a std::string. This gives convenience/control
-// of printf-style formatting in a more C++-ish way.
-//
-// Floating-point values with the formatting string "%f" are handled
-// specially so that enough digits are always printed so that the original
-// float/double can be reconstituted exactly from the printed digits.
+// StringPrintf()是用来替代sprintf()的，返回值是一个std::string。这比用std::cout
+// 更容易进行格式化输出。
+// 
+// 浮点输出（"%f"）已经特殊处理过了。
 template <typename... Args>
 inline std::string StringPrintf(const char *fmt, Args... args) {
     std::string ret;
@@ -169,10 +118,6 @@ inline std::string StringPrintf(const char *fmt, Args... args) {
     return ret;
 }
 
-#ifdef __GNUG__
-#pragma GCC diagnostic pop
-#endif  // __GNUG__
+}  // namespace porte
 
-}  // namespace pbrt
-
-#endif  // PBRT_CORE_STRINGPRINT_H
+#endif  // PORTE_CORE_STRINGPRINT_H
