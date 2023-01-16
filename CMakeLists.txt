@@ -17,6 +17,10 @@ add_subdirectory(ext)
 include_directories(src)
 include_directories(ext/pugixml/src)
 include_directories(ext)
+include_directories (
+  ext/glog/src
+  #${CMAKE_BINARY_DIR}/src/ext/glog
+)
 
 FILE (GLOB PORTE_SOURCE
 	src/core/*

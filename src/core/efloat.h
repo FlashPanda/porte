@@ -7,7 +7,6 @@
 #ifndef PORTE_CORE_EFLOAT_H
 #define PORTE_CORE_EFLOAT_H
 
-// core/efloat.h*
 #include <core/porte.h>
 #include <core/StringPrint.h>
 
@@ -41,8 +40,6 @@ public:
 
         r.vPrecise = vPrecise + ef.vPrecise;
 
-        // Interval arithemetic addition, with the result rounded away from
-        // the value r.v in order to be conservative.
         r.low = NextFloatDown(LowerBound() + ef.LowerBound());
         r.high = NextFloatUp(UpperBound() + ef.UpperBound());
         r.Check();

@@ -1,50 +1,16 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_SPECTRUM_H
-#define PBRT_CORE_SPECTRUM_H
+#ifndef PORTE_CORE_SPECTRUM_H
+#define PORTE_CORE_SPECTRUM_H
 
-// core/spectrum.h*
-#include "pbrt.h"
-#include "stringprint.h"
+#include <core/porte.h>
+#include <core/StringPrint.h>
 
 namespace pbrt {
 
-// Spectrum Utility Declarations
 static const int sampledLambdaStart = 400;
 static const int sampledLambdaEnd = 700;
 static const int nSpectralSamples = 60;
@@ -72,7 +38,6 @@ extern void Blackbody(const Float *lambda, int n, Float T, Float *Le);
 extern void BlackbodyNormalized(const Float *lambda, int n, Float T,
                                 Float *vals);
 
-// Spectral Data Declarations
 static const int nCIESamples = 471;
 extern const Float CIE_X[nCIESamples];
 extern const Float CIE_Y[nCIESamples];
@@ -96,11 +61,9 @@ extern const Float RGBIllum2SpectRed[nRGB2SpectSamples];
 extern const Float RGBIllum2SpectGreen[nRGB2SpectSamples];
 extern const Float RGBIllum2SpectBlue[nRGB2SpectSamples];
 
-// Spectrum Declarations
 template <int nSpectrumSamples>
 class CoefficientSpectrum {
-  public:
-    // CoefficientSpectrum Public Methods
+public:
     CoefficientSpectrum(Float v = 0.f) {
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] = v;
         DCHECK(!HasNaNs());
@@ -278,23 +241,19 @@ class CoefficientSpectrum {
         return c[i];
     }
 
-    // CoefficientSpectrum Public Data
     static const int nSamples = nSpectrumSamples;
 
   protected:
-    // CoefficientSpectrum Protected Data
     Float c[nSpectrumSamples];
 };
 
 class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
   public:
-    // SampledSpectrum Public Methods
     SampledSpectrum(Float v = 0.f) : CoefficientSpectrum(v) {}
     SampledSpectrum(const CoefficientSpectrum<nSpectralSamples> &v)
         : CoefficientSpectrum<nSpectralSamples>(v) {}
     static SampledSpectrum FromSampled(const Float *lambda, const Float *v,
                                        int n) {
-        // Sort samples if unordered, use sorted for returned spectrum
         if (!SpectrumSamplesSorted(lambda, v, n)) {
             std::vector<Float> slambda(&lambda[0], &lambda[n]);
             std::vector<Float> sv(&v[0], &v[n]);
@@ -303,7 +262,7 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
         }
         SampledSpectrum r;
         for (int i = 0; i < nSpectralSamples; ++i) {
-            // Compute average value of given SPD over $i$th sample's range
+            // 计算给定SPD的均值
             Float lambda0 = Lerp(Float(i) / Float(nSpectralSamples),
                                  sampledLambdaStart, sampledLambdaEnd);
             Float lambda1 = Lerp(Float(i + 1) / Float(nSpectralSamples),
@@ -313,7 +272,6 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
         return r;
     }
     static void Init() {
-        // Compute XYZ matching functions for _SampledSpectrum_
         for (int i = 0; i < nSpectralSamples; ++i) {
             Float wl0 = Lerp(Float(i) / Float(nSpectralSamples),
                              sampledLambdaStart, sampledLambdaEnd);
@@ -327,7 +285,6 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
                                             wl1);
         }
 
-        // Compute RGB to spectrum functions for _SampledSpectrum_
         for (int i = 0; i < nSpectralSamples; ++i) {
             Float wl0 = Lerp(Float(i) / Float(nSpectralSamples),
                              sampledLambdaStart, sampledLambdaEnd);
@@ -414,7 +371,6 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
                     SpectrumType type = SpectrumType::Reflectance);
 
   private:
-    // SampledSpectrum Private Data
     static SampledSpectrum X, Y, Z;
     static SampledSpectrum rgbRefl2SpectWhite, rgbRefl2SpectCyan;
     static SampledSpectrum rgbRefl2SpectMagenta, rgbRefl2SpectYellow;
@@ -430,7 +386,6 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
     using CoefficientSpectrum<3>::c;
 
   public:
-    // RGBSpectrum Public Methods
     RGBSpectrum(Float v = 0.f) : CoefficientSpectrum<3>(v) {}
     RGBSpectrum(const CoefficientSpectrum<3> &v) : CoefficientSpectrum<3>(v) {}
     RGBSpectrum(const RGBSpectrum &s,
@@ -464,7 +419,6 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
         return YWeight[0] * c[0] + YWeight[1] * c[1] + YWeight[2] * c[2];
     }
     static RGBSpectrum FromSampled(const Float *lambda, const Float *v, int n) {
-        // Sort samples if unordered, use sorted for returned spectrum
         if (!SpectrumSamplesSorted(lambda, v, n)) {
             std::vector<Float> slambda(&lambda[0], &lambda[n]);
             std::vector<Float> sv(&v[0], &v[n]);
@@ -487,7 +441,6 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
     }
 };
 
-// Spectrum Inline Functions
 template <int nSpectrumSamples>
 inline CoefficientSpectrum<nSpectrumSamples> Pow(
     const CoefficientSpectrum<nSpectrumSamples> &s, Float e) {
@@ -510,6 +463,6 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
                             Float lambdaMin, Float lambdaMax, int nOut,
                             Float *vOut);
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_SPECTRUM_H
+#endif  // PORTE_CORE_SPECTRUM_H

@@ -1,49 +1,16 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_GEOMETRY_H
-#define PBRT_CORE_GEOMETRY_H
+#ifndef PORTE_CORE_GEOMETRY_H
+#define PORTE_CORE_GEOMETRY_H
 
-// core/geometry.h*
-#include "pbrt.h"
-#include "stringprint.h"
+#include <core/porte.h>
+#include <core/StringPrint.h>
 #include <iterator>
 
-namespace pbrt {
+namespace porte {
 
 template <typename T>
 inline bool isNaN(const T x) {
@@ -54,19 +21,15 @@ inline bool isNaN(const int x) {
     return false;
 }
 
-// Vector Declarations
 template <typename T>
 class Vector2 {
   public:
-    // Vector2 Public Methods
     Vector2() { x = y = 0; }
     Vector2(T xx, T yy) : x(xx), y(yy) { DCHECK(!HasNaNs()); }
     bool HasNaNs() const { return isNaN(x) || isNaN(y); }
     explicit Vector2(const Point2<T> &p);
     explicit Vector2(const Point3<T> &p);
 #ifndef NDEBUG
-    // The default versions of these are fine for release builds; for debug
-    // we define them so that we can add the Assert checks.
     Vector2(const Vector2<T> &v) {
         DCHECK(!v.HasNaNs());
         x = v.x;
@@ -146,7 +109,6 @@ class Vector2 {
     Float LengthSquared() const { return x * x + y * y; }
     Float Length() const { return std::sqrt(LengthSquared()); }
 
-    // Vector2 Public Data
     T x, y;
 };
 
@@ -165,7 +127,6 @@ inline std::ostream &operator<<(std::ostream &os, const Vector2<Float> &v) {
 template <typename T>
 class Vector3 {
   public:
-    // Vector3 Public Methods
     T operator[](int i) const {
         DCHECK(i >= 0 && i <= 2);
         if (i == 0) return x;
@@ -183,8 +144,6 @@ class Vector3 {
     bool HasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
     explicit Vector3(const Point3<T> &p);
 #ifndef NDEBUG
-    // The default versions of these are fine for release builds; for debug
-    // we define them so that we can add the Assert checks.
     Vector3(const Vector3<T> &v) {
         DCHECK(!v.HasNaNs());
         x = v.x;
@@ -261,7 +220,6 @@ class Vector3 {
     Float Length() const { return std::sqrt(LengthSquared()); }
     explicit Vector3(const Normal3<T> &n);
 
-    // Vector3 Public Data
     T x, y, z;
 };
 
@@ -282,11 +240,9 @@ typedef Vector2<int> Vector2i;
 typedef Vector3<Float> Vector3f;
 typedef Vector3<int> Vector3i;
 
-// Point Declarations
 template <typename T>
 class Point2 {
   public:
-    // Point2 Public Methods
     explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) { DCHECK(!HasNaNs()); }
     Point2() { x = y = 0; }
     Point2(T xx, T yy) : x(xx), y(yy) { DCHECK(!HasNaNs()); }
@@ -400,7 +356,6 @@ class Point2 {
     bool operator!=(const Point2<T> &p) const { return x != p.x || y != p.y; }
     bool HasNaNs() const { return isNaN(x) || isNaN(y); }
 
-    // Point2 Public Data
     T x, y;
 };
 
@@ -419,7 +374,6 @@ inline std::ostream &operator<<(std::ostream &os, const Point2<Float> &v) {
 template <typename T>
 class Point3 {
   public:
-    // Point3 Public Methods
     Point3() { x = y = z = 0; }
     Point3(T x, T y, T z) : x(x), y(y), z(z) { DCHECK(!HasNaNs()); }
     template <typename U>
@@ -532,7 +486,6 @@ class Point3 {
     bool HasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
     Point3<T> operator-() const { return Point3<T>(-x, -y, -z); }
 
-    // Point3 Public Data
     T x, y, z;
 };
 
@@ -553,11 +506,9 @@ typedef Point2<int> Point2i;
 typedef Point3<Float> Point3f;
 typedef Point3<int> Point3i;
 
-// Normal Declarations
 template <typename T>
 class Normal3 {
   public:
-    // Normal3 Public Methods
     Normal3() { x = y = z = 0; }
     Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { DCHECK(!HasNaNs()); }
     Normal3<T> operator-() const { return Normal3(-x, -y, -z); }
@@ -657,7 +608,6 @@ class Normal3 {
         return z;
     }
 
-    // Normal3 Public Data
     T x, y, z;
 };
 
@@ -675,11 +625,9 @@ inline std::ostream &operator<<(std::ostream &os, const Normal3<Float> &v) {
 
 typedef Normal3<Float> Normal3f;
 
-// Bounds Declarations
 template <typename T>
 class Bounds2 {
   public:
-    // Bounds2 Public Methods
     Bounds2() {
         T minNum = std::numeric_limits<T>::lowest();
         T maxNum = std::numeric_limits<T>::max();
@@ -723,8 +671,8 @@ class Bounds2 {
         return b.pMin != pMin || b.pMax != pMax;
     }
     Point2<T> Lerp(const Point2f &t) const {
-        return Point2<T>(pbrt::Lerp(t.x, pMin.x, pMax.x),
-                         pbrt::Lerp(t.y, pMin.y, pMax.y));
+        return Point2<T>(porte::Lerp(t.x, pMin.x, pMax.x),
+            porte::Lerp(t.y, pMin.y, pMax.y));
     }
     Vector2<T> Offset(const Point2<T> &p) const {
         Vector2<T> o = p - pMin;
@@ -741,14 +689,12 @@ class Bounds2 {
         return os;
     }
 
-    // Bounds2 Public Data
     Point2<T> pMin, pMax;
 };
 
 template <typename T>
 class Bounds3 {
   public:
-    // Bounds3 Public Methods
     Bounds3() {
         T minNum = std::numeric_limits<T>::lowest();
         T maxNum = std::numeric_limits<T>::max();
@@ -794,9 +740,9 @@ class Bounds3 {
             return 2;
     }
     Point3<T> Lerp(const Point3f &t) const {
-        return Point3<T>(pbrt::Lerp(t.x, pMin.x, pMax.x),
-                         pbrt::Lerp(t.y, pMin.y, pMax.y),
-                         pbrt::Lerp(t.z, pMin.z, pMax.z));
+        return Point3<T>(porte::Lerp(t.x, pMin.x, pMax.x),
+            porte::Lerp(t.y, pMin.y, pMax.y),
+            porte::Lerp(t.z, pMin.z, pMax.z));
     }
     Vector3<T> Offset(const Point3<T> &p) const {
         Vector3<T> o = p - pMin;
@@ -822,7 +768,6 @@ class Bounds3 {
         return os;
     }
 
-    // Bounds3 Public Data
     Point3<T> pMin, pMax;
 };
 
@@ -865,10 +810,8 @@ class Bounds2iIterator : public std::forward_iterator_tag {
     const Bounds2i *bounds;
 };
 
-// Ray Declarations
 class Ray {
   public:
-    // Ray Public Methods
     Ray() : tMax(Infinity), time(0.f), medium(nullptr) {}
     Ray(const Point3f &o, const Vector3f &d, Float tMax = Infinity,
         Float time = 0.f, const Medium *medium = nullptr)
@@ -881,7 +824,6 @@ class Ray {
         return os;
     }
 
-    // Ray Public Data
     Point3f o;
     Vector3f d;
     mutable Float tMax;
@@ -891,7 +833,6 @@ class Ray {
 
 class RayDifferential : public Ray {
   public:
-    // RayDifferential Public Methods
     RayDifferential() { hasDifferentials = false; }
     RayDifferential(const Point3f &o, const Vector3f &d, Float tMax = Infinity,
                     Float time = 0.f, const Medium *medium = nullptr)
@@ -919,13 +860,11 @@ class RayDifferential : public Ray {
         return os;
     }
 
-    // RayDifferential Public Data
     bool hasDifferentials;
     Point3f rxOrigin, ryOrigin;
     Vector3f rxDirection, ryDirection;
 };
 
-// Geometry Inline Functions
 template <typename T>
 inline Vector3<T>::Vector3(const Point3<T> &p)
     : x(p.x), y(p.y), z(p.z) {
@@ -1264,10 +1203,7 @@ Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2) {
 
 template <typename T>
 Bounds3<T> Intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
-    // Important: assign to pMin/pMax directly and don't run the Bounds2()
-    // constructor, since it takes min/max of the points passed to it.  In
-    // turn, that breaks returning an invalid bound for the case where we
-    // intersect non-overlapping bounds (as we'd like to happen).
+    // 不经过构造函数，我们想直接赋值
     Bounds3<T> ret;
     ret.pMin = Max(b1.pMin, b2.pMin);
     ret.pMax = Min(b1.pMax, b2.pMax);
@@ -1300,8 +1236,7 @@ inline Bounds3<T> Expand(const Bounds3<T> &b, U delta) {
                       b.pMax + Vector3<T>(delta, delta, delta));
 }
 
-// Minimum squared distance from point to box; returns zero if point is
-// inside.
+// 从点到box地最小距离，如果点在box里面，返回0
 template <typename T, typename U>
 inline Float DistanceSquared(const Point3<T> &p, const Bounds3<U> &b) {
     Float dx = std::max({Float(0), b.pMin.x - p.x, p.x - b.pMax.x});
@@ -1320,12 +1255,9 @@ inline Bounds2iIterator begin(const Bounds2i &b) {
 }
 
 inline Bounds2iIterator end(const Bounds2i &b) {
-    // Normally, the ending point is at the minimum x value and one past
-    // the last valid y value.
+    // 通常，结束位置是最小的x值，以及最大的的y值之后的位置。
     Point2i pEnd(b.pMin.x, b.pMax.y);
-    // However, if the bounds are degenerate, override the end point to
-    // equal the start point so that any attempt to iterate over the bounds
-    // exits out immediately.
+    // 如果包围盒退化了，结束点的位置和起始点相同，这种情况就直接退出。
     if (b.pMin.x >= b.pMax.x || b.pMin.y >= b.pMax.y)
         pEnd = b.pMin;
     return Bounds2iIterator(b, pEnd);
@@ -1349,10 +1281,7 @@ Bounds2<T> Union(const Bounds2<T> &b, const Bounds2<T> &b2) {
 
 template <typename T>
 Bounds2<T> Intersect(const Bounds2<T> &b1, const Bounds2<T> &b2) {
-    // Important: assign to pMin/pMax directly and don't run the Bounds2()
-    // constructor, since it takes min/max of the points passed to it.  In
-    // turn, that breaks returning an invalid bound for the case where we
-    // intersect non-overlapping bounds (as we'd like to happen).
+    // 不走构造函数，直接赋值
     Bounds2<T> ret;
     ret.pMin = Max(b1.pMin, b2.pMin);
     ret.pMax = Min(b1.pMax, b2.pMax);
@@ -1389,15 +1318,15 @@ inline bool Bounds3<T>::IntersectP(const Ray &ray, Float *hitt0,
                                    Float *hitt1) const {
     Float t0 = 0, t1 = ray.tMax;
     for (int i = 0; i < 3; ++i) {
-        // Update interval for _i_th bounding box slab
+        // 更新第i块slab的间隔
         Float invRayDir = 1 / ray.d[i];
         Float tNear = (pMin[i] - ray.o[i]) * invRayDir;
         Float tFar = (pMax[i] - ray.o[i]) * invRayDir;
 
-        // Update parametric interval from slab intersection $t$ values
+        // 更新slab交点t值的参数间隔
         if (tNear > tFar) std::swap(tNear, tFar);
 
-        // Update _tFar_ to ensure robust ray--bounds intersection
+        // 更新tFar，确保ray-bounds相交检测的健壮性
         tFar *= 1 + 2 * gamma(3);
         t0 = tNear > t0 ? tNear : t0;
         t1 = tFar < t1 ? tFar : t1;
@@ -1412,24 +1341,24 @@ template <typename T>
 inline bool Bounds3<T>::IntersectP(const Ray &ray, const Vector3f &invDir,
                                    const int dirIsNeg[3]) const {
     const Bounds3f &bounds = *this;
-    // Check for ray intersection against $x$ and $y$ slabs
+    // 检查光线和x，y板的相交情况
     Float tMin = (bounds[dirIsNeg[0]].x - ray.o.x) * invDir.x;
     Float tMax = (bounds[1 - dirIsNeg[0]].x - ray.o.x) * invDir.x;
     Float tyMin = (bounds[dirIsNeg[1]].y - ray.o.y) * invDir.y;
     Float tyMax = (bounds[1 - dirIsNeg[1]].y - ray.o.y) * invDir.y;
 
-    // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
+    // 更新tMax和tyMax确保相交的健壮性
     tMax *= 1 + 2 * gamma(3);
     tyMax *= 1 + 2 * gamma(3);
     if (tMin > tyMax || tyMin > tMax) return false;
     if (tyMin > tMin) tMin = tyMin;
     if (tyMax < tMax) tMax = tyMax;
 
-    // Check for ray intersection against $z$ slab
+    // ray和z板的相交
     Float tzMin = (bounds[dirIsNeg[2]].z - ray.o.z) * invDir.z;
     Float tzMax = (bounds[1 - dirIsNeg[2]].z - ray.o.z) * invDir.z;
 
-    // Update _tzMax_ to ensure robust bounds intersection
+    // 更新tzMax来确保相交检测的健壮性
     tzMax *= 1 + 2 * gamma(3);
     if (tMin > tzMax || tzMin > tMax) return false;
     if (tzMin > tMin) tMin = tzMin;
@@ -1440,16 +1369,13 @@ inline bool Bounds3<T>::IntersectP(const Ray &ray, const Vector3f &invDir,
 inline Point3f OffsetRayOrigin(const Point3f &p, const Vector3f &pError,
                                const Normal3f &n, const Vector3f &w) {
     Float d = Dot(Abs(n), pError);
-#ifdef PBRT_FLOAT_AS_DOUBLE
-    // We have tons of precision; for now bump up the offset a bunch just
-    // to be extra sure that we start on the right side of the surface
-    // (In case of any bugs in the epsilons code...)
+#ifdef PORTE_FLOAT_AS_DOUBLE
     d *= 1024.;
 #endif
     Vector3f offset = d * Vector3f(n);
     if (Dot(w, n) < 0) offset = -offset;
     Point3f po = p + offset;
-    // Round offset point _po_ away from _p_
+    // 让po离p远点
     for (int i = 0; i < 3; ++i) {
         if (offset[i] > 0)
             po[i] = NextFloatUp(po[i]);
@@ -1480,6 +1406,6 @@ inline Float SphericalPhi(const Vector3f &v) {
     return (p < 0) ? (p + 2 * Pi) : p;
 }
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_GEOMETRY_H
+#endif  // PORTE_CORE_GEOMETRY_H

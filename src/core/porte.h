@@ -8,8 +8,6 @@
 #ifndef PORTE_CORE_PORTE_H
 #define PORTE_CORE_PORTE_H
 
-// core/pbrt.h*
-// Global Include Files
 #include <type_traits>
 #include <algorithm>
 #include <cinttypes>
@@ -20,17 +18,17 @@
 #include <string>
 #include <vector>
 #include "error.h"
-#ifdef PBRT_HAVE_MALLOC_H
+#ifdef PORTE_HAVE_MALLOC_H
 #include <malloc.h>  // for _alloca, memalign
 #endif
-#ifdef PBRT_HAVE_ALLOCA_H
+#ifdef PORTE_HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
 #include <assert.h>
 #include <string.h>
 #include <glog/logging.h>
 
-// Platform-specific definitions
+// 平台指定
 #if defined(_WIN32) || defined(_WIN64)
   #define PORTE_IS_WINDOWS
 #endif
@@ -154,7 +152,7 @@ struct Options {
     Float cropWindow[2][2];
 };
 
-extern Options PbrtOptions;
+extern Options PorteOptions;
 class TextureParams;
 
 // 全局常数
@@ -165,6 +163,7 @@ class TextureParams;
 static constexpr Float MaxFloat = std::numeric_limits<Float>::max();
 static constexpr Float Infinity = std::numeric_limits<Float>::infinity();
 #endif
+
 #ifdef _MSC_VER
 #define MachineEpsilon (std::numeric_limits<Float>::epsilon() * 0.5)
 #else
@@ -209,11 +208,11 @@ inline double BitsToFloat(uint64_t ui) {
 }
 
 inline float NextFloatUp(float v) {
-    // Handle infinity and negative zero for _NextFloatUp()_
+    // 处理无穷大，以及负0
     if (std::isinf(v) && v > 0.) return v;
     if (v == -0.f) v = 0.f;
 
-    // Advance _v_ to next higher float
+    // 获得一个比v更高一点，也仅高一点的数字
     uint32_t ui = FloatToBits(v);
     if (v >= 0)
         ++ui;
@@ -223,7 +222,7 @@ inline float NextFloatUp(float v) {
 }
 
 inline float NextFloatDown(float v) {
-    // Handle infinity and positive zero for _NextFloatDown()_
+    // 处理无穷大以及负0
     if (std::isinf(v) && v < 0.) return v;
     if (v == 0.f) v = -0.f;
     uint32_t ui = FloatToBits(v);
@@ -301,7 +300,7 @@ inline Float Log2(Float x) {
 }
 
 inline int Log2Int(uint32_t v) {
-#if defined(PBRT_IS_MSVC)
+#if defined(PORTE_IS_MSVC)
     unsigned long lz = 0;
     if (_BitScanReverse(&lz, v)) return lz;
     return 0;
@@ -313,7 +312,7 @@ inline int Log2Int(uint32_t v) {
 inline int Log2Int(int32_t v) { return Log2Int((uint32_t)v); }
 
 inline int Log2Int(uint64_t v) {
-#if defined(PBRT_IS_MSVC)
+#if defined(PORTE_IS_MSVC)
     unsigned long lz = 0;
 #if defined(_WIN64)
     _BitScanReverse64(&lz, v);
@@ -324,7 +323,7 @@ inline int Log2Int(uint64_t v) {
         _BitScanReverse(&lz, v & 0xffffffff);
 #endif // _WIN64
     return lz;
-#else  // PBRT_IS_MSVC
+#else  // PORTE_IS_MSVC
     return 63 - __builtin_clzll(v);
 #endif
 }
@@ -332,7 +331,7 @@ inline int Log2Int(uint64_t v) {
 inline int Log2Int(int64_t v) { return Log2Int((uint64_t)v); }
 
 template <typename T>
-inline PBRT_CONSTEXPR bool IsPowerOf2(T v) {
+inline constexpr bool IsPowerOf2(T v) {
     return v && !(v & (v - 1));
 }
 
@@ -358,7 +357,7 @@ inline int64_t RoundUpPow2(int64_t v) {
 }
 
 inline int CountTrailingZeros(uint32_t v) {
-#if defined(PBRT_IS_MSVC)
+#if defined(PORTE_IS_MSVC)
     unsigned long index;
     if (_BitScanForward(&index, v))
         return index;
@@ -374,7 +373,7 @@ int FindInterval(int size, const Predicate &pred) {
     int first = 0, len = size;
     while (len > 0) {
         int half = len >> 1, middle = first + half;
-        // Bisect range based on value of _pred_ at _middle_
+        // 对半分
         if (pred(middle)) {
             first = middle + 1;
             len -= half + 1;
@@ -387,12 +386,12 @@ int FindInterval(int size, const Predicate &pred) {
 inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
 
 inline bool Quadratic(Float a, Float b, Float c, Float *t0, Float *t1) {
-    // Find quadratic discriminant
+    // 二次判别式
     double discrim = (double)b * (double)b - 4 * (double)a * (double)c;
     if (discrim < 0) return false;
     double rootDiscrim = std::sqrt(discrim);
 
-    // Compute quadratic _t_ values
+    // 计算二次项t的值
     double q;
     if (b < 0)
         q = -.5 * (b - rootDiscrim);
@@ -435,7 +434,6 @@ inline Float ErfInv(Float x) {
 }
 
 inline Float Erf(Float x) {
-    // constants
     Float a1 = 0.254829592f;
     Float a2 = -0.284496736f;
     Float a3 = 1.421413741f;
@@ -443,12 +441,12 @@ inline Float Erf(Float x) {
     Float a5 = 1.061405429f;
     Float p = 0.3275911f;
 
-    // Save the sign of x
+    // 保存x的符号
     int sign = 1;
     if (x < 0) sign = -1;
     x = std::abs(x);
 
-    // A&S formula 7.1.26
+    
     Float t = 1 / (1 + p * x);
     Float y =
         1 -
@@ -457,6 +455,6 @@ inline Float Erf(Float x) {
     return sign * y;
 }
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_PBRT_H
+#endif  // PORTE_CORE_PBRT_H

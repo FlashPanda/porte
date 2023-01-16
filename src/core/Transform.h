@@ -1,54 +1,19 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
 #if defined(_MSC_VER)
 #define NOMINMAX
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_TRANSFORM_H
-#define PBRT_CORE_TRANSFORM_H
+#ifndef PORTE_CORE_TRANSFORM_H
+#define PORTE_CORE_TRANSFORM_H
 
-// core/transform.h*
-#include "pbrt.h"
-#include "stringprint.h"
-#include "geometry.h"
-#include "quaternion.h"
+#include <core/porte.h>
+#include <core/StringPrint.h>
+#include <core/Geometry.h>
+#include <core/Quaternion.h>
 
-namespace pbrt {
+namespace porte {
 
-// Matrix4x4 Declarations
 struct Matrix4x4 {
-    // Matrix4x4 Public Methods
     Matrix4x4() {
         m[0][0] = m[1][1] = m[2][2] = m[3][3] = 1.f;
         m[0][1] = m[0][2] = m[0][3] = m[1][0] = m[1][2] = m[1][3] = m[2][0] =
@@ -94,7 +59,6 @@ struct Matrix4x4 {
     friend Matrix4x4 Inverse(const Matrix4x4 &);
 
     friend std::ostream &operator<<(std::ostream &os, const Matrix4x4 &m) {
-        // clang-format off
         os << StringPrintf("[ [ %f, %f, %f, %f ] "
                            "[ %f, %f, %f, %f ] "
                            "[ %f, %f, %f, %f ] "
@@ -103,17 +67,14 @@ struct Matrix4x4 {
                            m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
                            m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
                            m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3]);
-        // clang-format on
         return os;
     }
 
     Float m[4][4];
 };
 
-// Transform Declarations
 class Transform {
-  public:
-    // Transform Public Methods
+public:
     Transform() {}
     Transform(const Float mat[4][4]) {
         m = Matrix4x4(mat[0][0], mat[0][1], mat[0][2], mat[0][3], mat[1][0],
@@ -199,7 +160,6 @@ class Transform {
     }
 
   private:
-    // Transform Private Data
     Matrix4x4 m, mInv;
     friend class AnimatedTransform;
     friend struct Quaternion;
@@ -217,7 +177,6 @@ Transform Perspective(Float fov, Float znear, Float zfar);
 bool SolveLinearSystem2x2(const Float A[2][2], const Float B[2], Float *x0,
                           Float *x1);
 
-// Transform Inline Functions
 template <typename T>
 inline Point3<T> Transform::operator()(const Point3<T> &p) const {
     T x = p.x, y = p.y, z = p.z;
@@ -278,13 +237,13 @@ template <typename T>
 inline Point3<T> Transform::operator()(const Point3<T> &p,
                                        Vector3<T> *pError) const {
     T x = p.x, y = p.y, z = p.z;
-    // Compute transformed coordinates from point _pt_
+    
     T xp = m.m[0][0] * x + m.m[0][1] * y + m.m[0][2] * z + m.m[0][3];
     T yp = m.m[1][0] * x + m.m[1][1] * y + m.m[1][2] * z + m.m[1][3];
     T zp = m.m[2][0] * x + m.m[2][1] * y + m.m[2][2] * z + m.m[2][3];
     T wp = m.m[3][0] * x + m.m[3][1] * y + m.m[3][2] * z + m.m[3][3];
 
-    // Compute absolute error for transformed point
+    // ¼ÆËã¾ø¶ÔÎó²î
     T xAbsSum = (std::abs(m.m[0][0] * x) + std::abs(m.m[0][1] * y) +
                  std::abs(m.m[0][2] * z) + std::abs(m.m[0][3]));
     T yAbsSum = (std::abs(m.m[1][0] * x) + std::abs(m.m[1][1] * y) +
@@ -388,7 +347,6 @@ inline Ray Transform::operator()(const Ray &r, Vector3f *oError,
     if (lengthSquared > 0) {
         Float dt = Dot(Abs(d), *oError) / lengthSquared;
         o += d * dt;
-        //        tMax -= dt;
     }
     return Ray(o, d, tMax, r.time, r.medium);
 }
@@ -403,15 +361,12 @@ inline Ray Transform::operator()(const Ray &r, const Vector3f &oErrorIn,
     if (lengthSquared > 0) {
         Float dt = Dot(Abs(d), *oErrorOut) / lengthSquared;
         o += d * dt;
-        //        tMax -= dt;
     }
     return Ray(o, d, tMax, r.time, r.medium);
 }
 
-// AnimatedTransform Declarations
 class AnimatedTransform {
   public:
-    // AnimatedTransform Public Methods
     AnimatedTransform(const Transform *startTransform, Float startTime,
                       const Transform *endTransform, Float endTime);
     static void Decompose(const Matrix4x4 &m, Vector3f *T, Quaternion *R,
@@ -428,7 +383,6 @@ class AnimatedTransform {
     Bounds3f BoundPointMotion(const Point3f &p) const;
 
   private:
-    // AnimatedTransform Private Data
     const Transform *startTransform, *endTransform;
     const Float startTime, endTime;
     const bool actuallyAnimated;
@@ -448,6 +402,6 @@ class AnimatedTransform {
     DerivativeTerm c1[3], c2[3], c3[3], c4[3], c5[3];
 };
 
-}  // namespace pbrt
+}  // namespace porte
 
-#endif  // PBRT_CORE_TRANSFORM_H
+#endif  // PORTE_CORE_TRANSFORM_H

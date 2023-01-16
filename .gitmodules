@@ -4,3 +4,6 @@
 [submodule "ext/tinyobjloader"]
 	path = ext/tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "ext/glog"]
+	path = ext/glog
+	url = https://github.com/google/glog.git

@@ -1,43 +1,8 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
-
-// core/spectrum.cpp*
-#include "spectrum.h"
+#include <core/Spectrum.h>
 #include <algorithm>
 
-namespace pbrt {
+namespace porte {
 
-// Spectrum Method Definitions
 bool SpectrumSamplesSorted(const Float *lambda, const Float *vals, int n) {
     for (int i = 0; i < n - 1; ++i)
         if (lambda[i] > lambda[i + 1]) return false;
@@ -60,22 +25,23 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
                              Float lambdaStart, Float lambdaEnd) {
     for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
     CHECK_LT(lambdaStart, lambdaEnd);
-    // Handle cases with out-of-bounds range or single sample only
+    // 处理超出范围的情况以及单个样本的情况
     if (lambdaEnd <= lambda[0]) return vals[0];
     if (lambdaStart >= lambda[n - 1]) return vals[n - 1];
     if (n == 1) return vals[0];
     Float sum = 0;
-    // Add contributions of constant segments before/after samples
+    
+    // 增加常量段的贡献
     if (lambdaStart < lambda[0]) sum += vals[0] * (lambda[0] - lambdaStart);
     if (lambdaEnd > lambda[n - 1])
         sum += vals[n - 1] * (lambdaEnd - lambda[n - 1]);
 
-    // Advance to first relevant wavelength segment
+    // 前进到第一个相关波长段
     int i = 0;
     while (lambdaStart > lambda[i + 1]) ++i;
     CHECK_LT(i + 1, n);
 
-    // Loop over wavelength sample segments and add contributions
+    // 循环波长样本段并添加贡献值
     auto interp = [lambda, vals](Float w, int i) {
         return Lerp((w - lambda[i]) / (lambda[i + 1] - lambda[i]), vals[i],
                     vals[i + 1]);
@@ -99,9 +65,8 @@ SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
                                          SpectrumType type) {
     SampledSpectrum r;
     if (type == SpectrumType::Reflectance) {
-        // Convert reflectance spectrum to RGB
+        // 转换反射光谱
         if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
-            // Compute reflectance _SampledSpectrum_ with _rgb[0]_ as minimum
             r += rgb[0] * rgbRefl2SpectWhite;
             if (rgb[1] <= rgb[2]) {
                 r += (rgb[1] - rgb[0]) * rgbRefl2SpectCyan;
@@ -111,7 +76,6 @@ SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
                 r += (rgb[1] - rgb[2]) * rgbRefl2SpectGreen;
             }
         } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
-            // Compute reflectance _SampledSpectrum_ with _rgb[1]_ as minimum
             r += rgb[1] * rgbRefl2SpectWhite;
             if (rgb[0] <= rgb[2]) {
                 r += (rgb[0] - rgb[1]) * rgbRefl2SpectMagenta;
@@ -121,7 +85,6 @@ SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
                 r += (rgb[0] - rgb[2]) * rgbRefl2SpectRed;
             }
         } else {
-            // Compute reflectance _SampledSpectrum_ with _rgb[2]_ as minimum
             r += rgb[2] * rgbRefl2SpectWhite;
             if (rgb[0] <= rgb[1]) {
                 r += (rgb[0] - rgb[2]) * rgbRefl2SpectYellow;
@@ -133,9 +96,8 @@ SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
         }
         r *= .94;
     } else {
-        // Convert illuminant spectrum to RGB
+        // 转换中照明光谱
         if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
-            // Compute illuminant _SampledSpectrum_ with _rgb[0]_ as minimum
             r += rgb[0] * rgbIllum2SpectWhite;
             if (rgb[1] <= rgb[2]) {
                 r += (rgb[1] - rgb[0]) * rgbIllum2SpectCyan;
@@ -145,7 +107,6 @@ SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
                 r += (rgb[1] - rgb[2]) * rgbIllum2SpectGreen;
             }
         } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
-            // Compute illuminant _SampledSpectrum_ with _rgb[1]_ as minimum
             r += rgb[1] * rgbIllum2SpectWhite;
             if (rgb[0] <= rgb[2]) {
                 r += (rgb[0] - rgb[1]) * rgbIllum2SpectMagenta;
@@ -155,7 +116,6 @@ SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
                 r += (rgb[0] - rgb[2]) * rgbIllum2SpectRed;
             }
         } else {
-            // Compute illuminant _SampledSpectrum_ with _rgb[2]_ as minimum
             r += rgb[2] * rgbIllum2SpectWhite;
             if (rgb[0] <= rgb[1]) {
                 r += (rgb[0] - rgb[2]) * rgbIllum2SpectYellow;
@@ -188,7 +148,7 @@ Float InterpolateSpectrumSamples(const Float *lambda, const Float *vals, int n,
 }
 
 const Float CIE_X[nCIESamples] = {
-    // CIE X function values
+    // CIE X 函数值
     0.0001299000f,   0.0001458470f,   0.0001638021f,   0.0001840037f,
     0.0002066902f,   0.0002321000f,   0.0002607280f,   0.0002930750f,
     0.0003293880f,   0.0003699140f,   0.0004149000f,   0.0004641587f,
@@ -309,7 +269,7 @@ const Float CIE_X[nCIESamples] = {
     0.000001439440f, 0.000001341977f, 0.000001251141f};
 
 const Float CIE_Y[nCIESamples] = {
-    // CIE Y function values
+    // CIE Y 函数值
     0.000003917000f,  0.000004393581f,  0.000004929604f,  0.000005532136f,
     0.000006208245f,  0.000006965000f,  0.000007813219f,  0.000008767336f,
     0.000009839844f,  0.00001104323f,   0.00001239000f,   0.00001388641f,
@@ -430,7 +390,7 @@ const Float CIE_Y[nCIESamples] = {
     0.0000005198080f, 0.0000004846123f, 0.0000004518100f};
 
 const Float CIE_Z[nCIESamples] = {
-    // CIE Z function values
+    // CIE Z 函数值
     0.0006061000f,
     0.0006808792f,
     0.0007651456f,
@@ -945,7 +905,7 @@ void Blackbody(const Float *lambda, int n, Float T, Float *Le) {
     const Float h = 6.62606957e-34;
     const Float kb = 1.3806488e-23;
     for (int i = 0; i < n; ++i) {
-        // Compute emitted radiance for blackbody at wavelength _lambda[i]_
+        // 波长lambda[i]的黑体辐射值
         Float l = lambda[i] * 1e-9;
         Float lambda5 = (l * l) * (l * l) * l;
         Le[i] = (2 * h * c * c) /
@@ -956,14 +916,13 @@ void Blackbody(const Float *lambda, int n, Float T, Float *Le) {
 
 void BlackbodyNormalized(const Float *lambda, int n, Float T, Float *Le) {
     Blackbody(lambda, n, T, Le);
-    // Normalize _Le_ values based on maximum blackbody radiance
+    // 基于最大黑体辐射值标准化Le
     Float lambdaMax = 2.8977721e-3 / T * 1e9;
     Float maxL;
     Blackbody(&lambdaMax, 1, T, &maxL);
     for (int i = 0; i < n; ++i) Le[i] /= maxL;
 }
 
-// Spectral Data Definitions
 SampledSpectrum SampledSpectrum::X;
 SampledSpectrum SampledSpectrum::Y;
 SampledSpectrum SampledSpectrum::Z;
@@ -1306,4 +1265,4 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
     }
 }
 
-}  // namespace pbrt
+}  // namespace porte
