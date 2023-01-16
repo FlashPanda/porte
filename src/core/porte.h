@@ -26,7 +26,7 @@
 #endif
 #include <assert.h>
 #include <string.h>
-#include <glog/logging.h>
+//#include <glog/logging.h>
 
 // 平台指定
 #if defined(_WIN32) || defined(_WIN64)

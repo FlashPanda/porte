@@ -717,7 +717,7 @@ namespace porte
 			if (std::string(typeAttr.as_string()) == "matte")
 			{
 				pugi::xml_attribute kdAttr = node.attribute("Kd");
-				Vector3Df kd(0.f);
+				Vector3f kd(0.f);
 				if (kdAttr.empty())
 				{
 					kd.Set(1.f);
