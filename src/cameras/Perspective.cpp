@@ -13,8 +13,8 @@ namespace porte
 		return ProjectiveCamera::GenerateRay(sample, ray);
 	}
 
-	PerspectiveCamera* CreatePerspectiveCamera(Film* film)
+	PerspectiveCamera* CreatePerspectiveCamera(Transform trans, Film* film)
 	{
-		return new PerspectiveCamera(film);
+		return new PerspectiveCamera(trans, film);
 	}
 }

@@ -55,86 +55,7 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
     return sum / (lambdaEnd - lambdaStart);
 }
 
-RGBSpectrum SampledSpectrum::ToRGBSpectrum() const {
-    Float rgb[3];
-    ToRGB(rgb);
-    return RGBSpectrum::FromRGB(rgb);
-}
 
-SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
-                                         SpectrumType type) {
-    SampledSpectrum r;
-    if (type == SpectrumType::Reflectance) {
-        // 转换反射光谱
-        if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
-            r += rgb[0] * rgbRefl2SpectWhite;
-            if (rgb[1] <= rgb[2]) {
-                r += (rgb[1] - rgb[0]) * rgbRefl2SpectCyan;
-                r += (rgb[2] - rgb[1]) * rgbRefl2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[0]) * rgbRefl2SpectCyan;
-                r += (rgb[1] - rgb[2]) * rgbRefl2SpectGreen;
-            }
-        } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
-            r += rgb[1] * rgbRefl2SpectWhite;
-            if (rgb[0] <= rgb[2]) {
-                r += (rgb[0] - rgb[1]) * rgbRefl2SpectMagenta;
-                r += (rgb[2] - rgb[0]) * rgbRefl2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[1]) * rgbRefl2SpectMagenta;
-                r += (rgb[0] - rgb[2]) * rgbRefl2SpectRed;
-            }
-        } else {
-            r += rgb[2] * rgbRefl2SpectWhite;
-            if (rgb[0] <= rgb[1]) {
-                r += (rgb[0] - rgb[2]) * rgbRefl2SpectYellow;
-                r += (rgb[1] - rgb[0]) * rgbRefl2SpectGreen;
-            } else {
-                r += (rgb[1] - rgb[2]) * rgbRefl2SpectYellow;
-                r += (rgb[0] - rgb[1]) * rgbRefl2SpectRed;
-            }
-        }
-        r *= .94;
-    } else {
-        // 转换中照明光谱
-        if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
-            r += rgb[0] * rgbIllum2SpectWhite;
-            if (rgb[1] <= rgb[2]) {
-                r += (rgb[1] - rgb[0]) * rgbIllum2SpectCyan;
-                r += (rgb[2] - rgb[1]) * rgbIllum2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[0]) * rgbIllum2SpectCyan;
-                r += (rgb[1] - rgb[2]) * rgbIllum2SpectGreen;
-            }
-        } else if (rgb[1] <= rgb[0] && rgb[1] <= rgb[2]) {
-            r += rgb[1] * rgbIllum2SpectWhite;
-            if (rgb[0] <= rgb[2]) {
-                r += (rgb[0] - rgb[1]) * rgbIllum2SpectMagenta;
-                r += (rgb[2] - rgb[0]) * rgbIllum2SpectBlue;
-            } else {
-                r += (rgb[2] - rgb[1]) * rgbIllum2SpectMagenta;
-                r += (rgb[0] - rgb[2]) * rgbIllum2SpectRed;
-            }
-        } else {
-            r += rgb[2] * rgbIllum2SpectWhite;
-            if (rgb[0] <= rgb[1]) {
-                r += (rgb[0] - rgb[2]) * rgbIllum2SpectYellow;
-                r += (rgb[1] - rgb[0]) * rgbIllum2SpectGreen;
-            } else {
-                r += (rgb[1] - rgb[2]) * rgbIllum2SpectYellow;
-                r += (rgb[0] - rgb[1]) * rgbIllum2SpectRed;
-            }
-        }
-        r *= .86445f;
-    }
-    return r.Clamp();
-}
-
-SampledSpectrum::SampledSpectrum(const RGBSpectrum &r, SpectrumType t) {
-    Float rgb[3];
-    r.ToRGB(rgb);
-    *this = SampledSpectrum::FromRGB(rgb, t);
-}
 
 Float InterpolateSpectrumSamples(const Float *lambda, const Float *vals, int n,
                                  Float l) {
@@ -923,23 +844,6 @@ void BlackbodyNormalized(const Float *lambda, int n, Float T, Float *Le) {
     for (int i = 0; i < n; ++i) Le[i] /= maxL;
 }
 
-SampledSpectrum SampledSpectrum::X;
-SampledSpectrum SampledSpectrum::Y;
-SampledSpectrum SampledSpectrum::Z;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectWhite;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectCyan;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectMagenta;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectYellow;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectRed;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectGreen;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectBlue;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectWhite;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectCyan;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectMagenta;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectYellow;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectRed;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectGreen;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectBlue;
 const Float RGB2SpectLambda[nRGB2SpectSamples] = {
     380.000000, 390.967743, 401.935486, 412.903229, 423.870972, 434.838715,
     445.806458, 456.774200, 467.741943, 478.709686, 489.677429, 500.645172,

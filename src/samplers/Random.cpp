@@ -7,8 +7,8 @@ namespace porte
 		return rng.UniformFloat();
 	}
 
-	Vector2f RandomSampler::Get2D()
+	Point2f RandomSampler::Get2D()
 	{
-		return Vector2f(rng.UniformFloat(), rng.UniformFloat());
+		return Point2f(rng.UniformFloat(), rng.UniformFloat());
 	}
 }

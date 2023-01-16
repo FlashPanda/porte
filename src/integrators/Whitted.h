@@ -10,11 +10,12 @@ namespace porte
 	class WhittedIntegrator : public SamplerIntegrator
 	{
 	public:
-		// WhittedIntegrator Public Methods
-		WhittedIntegrator()
-			: SamplerIntegrator() {}
+		WhittedIntegrator(std::shared_ptr<const Camera> camera,
+			std::shared_ptr<Sampler> sampler,
+			const Bounds2i& pixelBounds)
+			: SamplerIntegrator(camera, sampler, pixelBounds) {}
 		Vector3f Li(const Ray& ray, const Scene& scene,
-			Sampler& sampler, int32 depth = 0) const;
+			Sampler& sampler, int32_t depth = 0) const;
 	};
 
 	WhittedIntegrator* CreateWhittedIntegrator(std::shared_ptr<Sampler> sampler,

@@ -3,53 +3,13 @@
 #include <unordered_map>
 #include <pugixml.hpp>
 #include <pugiconfig.hpp>
-#include "MathUtil.h"
-#include "Vector.hpp"
-#include "Matrix.hpp"
-#include <filesystem>
-#include "Filter.h"
-#include "Material.h"
-#include "Film.h"
+#include <core/porte.h>
 
-namespace panda
+namespace porte
 {
-	class SceneObject;
-	class SceneNode;
-	class SceneObjectMesh;
-	class SceneObjectCamera;
-	class SceneObjectMaterial;
-	class SceneObjectLight;
-	class SceneNodeMesh;
-	class SceneNodeCamera;
-	class SceneNodeLight;
-	class Image;
-	class Integrator;
-	class Sampler;
-	class SurfaceInteraction;
-	class Ray;
-	class Primitive;
-	class Light;
-
-	void CreatePPMImage(std::shared_ptr<Image> pImage);
-
-	void CreatePPMImage(const Vector2Di& res, float* rgb);
-
 	class Scene
 	{
-		// 不需要add函数因为这本身就是一个public的结构
 	public:
-		std::shared_ptr<SceneNode> SceneGraph;
-
-		std::unordered_map<std::string, std::shared_ptr<SceneObjectMesh>> mMeshes;
-		std::unordered_map<std::string, std::shared_ptr<SceneObjectCamera>> mCameras;
-		std::unordered_map<std::string, std::shared_ptr<SceneObjectMaterial>> mMaterials;
-		std::unordered_map<std::string, std::shared_ptr<SceneObjectLight>> mLights;
-
-		std::unordered_map<std::string, std::shared_ptr<SceneNodeMesh>> mMeshNodes;
-		std::unordered_map<std::string, std::shared_ptr<SceneNodeCamera>> mCameraNodes;
-		std::unordered_map<std::string, std::shared_ptr<SceneNodeLight>> mLightNodes;
-
-		std::shared_ptr<SceneNodeCamera> mMainCamera;
 
 		std::unordered_map<std::string, std::shared_ptr<Material>> mBSDFMaterials;
 		std::vector<std::shared_ptr<Primitive>> mPrimitives;
@@ -74,7 +34,7 @@ namespace panda
 
 		void ParseXmlPath(const pugi::xml_node& node, const std::string& infile);
 		void ParseXmlIntegrator(const pugi::xml_node& node);
-		Film* ParseXmlFilm(const pugi::xml_node& node, Filter* inFilter);
+		Film* ParseXmlFilm(const pugi::xml_node& node, std::unique_ptr<Filter> inFilter);
 		Filter* ParseXmlFilter(const pugi::xml_node& node);
 		void ParseXmlSampler(const pugi::xml_node& node);
 		void ParseXmlCamera(const pugi::xml_node& node);
@@ -113,6 +73,8 @@ namespace panda
 
 		int32 mMeshCount = 1;
 		int32 mMaterialCount = 1;
+		std::shared_ptr<Sampler> mSampler;
+		std::shared_ptr<Camera> mCamera;
 	};
 
 	extern Scene* g_pScene;

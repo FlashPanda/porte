@@ -1,29 +1,35 @@
-#include "Scene.h"
-#include "SceneObject.h"
-#include "SceneNode.h"
-#include "SceneObjectCamera.h"
-#include "SceneNodeCamera.h"
-#include "SceneObjectMaterial.h"
-#include "SceneObjectMesh.h"
-#include "SceneNodeMesh.h"
-#include "SceneNodeLight.h"
-#include "SceneObjectLight.h"
-#include "Image.h"
+//#include "Scene.h"
+//#include "SceneObject.h"
+//#include "SceneNode.h"
+//#include "SceneObjectCamera.h"
+//#include "SceneNodeCamera.h"
+//#include "SceneObjectMaterial.h"
+//#include "SceneObjectMesh.h"
+//#include "SceneNodeMesh.h"
+//#include "SceneNodeLight.h"
+//#include "SceneObjectLight.h"
+//
+//#include "Integrator.h"
+//#include "Sampler.h"
+//#include "ObjLoader.h"
+//#include "Ray.h"
+//#include "Interaction.h"
+//#include "Shape.h"
+//#include "Primitive.h"
+//#include "Light.h"
+
 #include <fstream>
 #include <filesystem>	// c++ 17
-#include "Integrator.h"
-#include "Sampler.h"
-#include "ObjLoader.h"
-#include "Ray.h"
-#include "Interaction.h"
-#include "Shape.h"
-#include "Primitive.h"
-#include "Light.h"
+#include <iostream>
+#include <core/Scene.h>
+#include <integrators/Whitted.h>
+#include <core/Transform.h>
+#include <filters/Box.h>
+#include <core/Film.h>
+#include <samplers/Random.h>
+#include <cameras/Perspective.h>
 
-/*
-* 经过验证，Maya中导出的usda场景，其中的transform是可以直接用的。也就是说，它也是row major的。
-*/
-namespace panda
+namespace porte
 {
 	void Scene::LoadSceneFromFile(std::string filename)
 	{
@@ -40,15 +46,15 @@ namespace panda
 			ParseXmlScene(filename);
 
 			// 可以想办法直接把材质定义在mesh之前，这样就可以直接用材质构造了。
-			for (auto it : mPrimitives)
-			{
-				std::shared_ptr<GeometricPrimitive> ptr = std::static_pointer_cast<GeometricPrimitive>(it);
-				if (mBSDFMaterials.at(ptr->GetMatName()))
-				{
-					ptr->MaterialRedirection(mBSDFMaterials[ptr->GetMatName()]);
-				}
-			}
-			mAggregate = CreateBVHAccelerator(std::move(mPrimitives));
+			//for (auto it : mPrimitives)
+			//{
+			//	std::shared_ptr<GeometricPrimitive> ptr = std::static_pointer_cast<GeometricPrimitive>(it);
+			//	if (mBSDFMaterials.at(ptr->GetMatName()))
+			//	{
+			//		ptr->MaterialRedirection(mBSDFMaterials[ptr->GetMatName()]);
+			//	}
+			//}
+			//mAggregate = CreateBVHAccelerator(std::move(mPrimitives));
 		}
 		else
 		{
@@ -161,7 +167,7 @@ namespace panda
 		mSearchPaths.push_back(targetPath.append(pathStr));
 
 		// 输出搜索路径
-		for (int32 i = 0; i < mSearchPaths.size(); ++i)
+		for (int32_t i = 0; i < mSearchPaths.size(); ++i)
 		{
 			std::cout << "Search path : " << mSearchPaths[i].string() << std::endl;
 		}
@@ -192,8 +198,12 @@ namespace panda
 				//	}
 				//}
 
-				mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5,
-					std::shared_ptr<Sampler>(mSampler), mMainCamera);
+				//mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5,
+				//	std::shared_ptr<Sampler>(mSampler), mMainCamera);
+			}
+			else if (std::string(attr.value()) == "whitted")
+			{
+				mIntegrator = CreateWhittedIntegrator(mSampler, mCamera);
 			}
 			else
 			{
@@ -203,14 +213,15 @@ namespace panda
 		else
 		{
 			// 默认用Direct积分器
-			mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5,
-				std::shared_ptr<Sampler>(mSampler), mMainCamera);
+			//CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5,
+			//	std::shared_ptr<Sampler>(mSampler), mMainCamera);
+			std::cout << "[ERROR] no integrator!" << std::endl;
 		}
 	}
 
-	Film* Scene::ParseXmlFilm(const pugi::xml_node& node, Filter* inFilter)
+	Film* Scene::ParseXmlFilm(const pugi::xml_node& node, std::unique_ptr<Filter> inFilter)
 	{
-		Vector2Di res({1280, 720});
+		Vector2i res({1280, 720});
 		pugi::xml_attribute widthAttr = node.attribute("width");
 		if (!widthAttr.empty())
 		{
@@ -233,7 +244,7 @@ namespace panda
 			res[1] = 720;
 		}
 
-		return CreateFilm(res, inFilter);
+		return CreateFilm(res, std::move(inFilter));
 	}
 
 	Filter* Scene::ParseXmlFilter(const pugi::xml_node& node)
@@ -263,7 +274,7 @@ namespace panda
 		if (typeAttr.empty())
 		{
 			std::cout << "Sampler type property is empty. set default to random. " << std::endl;
-			mSampler = new RandomSampler(4);
+			mSampler = std::make_shared<RandomSampler>(4);
 			return;
 		}
 
@@ -273,12 +284,12 @@ namespace panda
 			if (sc.empty())
 			{
 				std::cout << "Sampler sample_count property is empty. set default to 4" << std::endl;
-				mSampler = new RandomSampler(4);
+				mSampler = std::make_shared<RandomSampler>(4);
 				return;
 			}
 			else
 			{
-				mSampler = new RandomSampler(sc.as_int());
+				mSampler = std::make_shared<RandomSampler>(4);
 				return;
 			}
 		}
@@ -296,8 +307,7 @@ namespace panda
 		std::string cameraName("MainCamera");
 		float nearClip = 0.1f;
 		float farClip = 1000.f;
-		Matrix4f mat;
-		mat.SetIdentity();
+		Transform trans;
 
 		pugi::xml_node propertyNode = node.child("property");
 		if (propertyNode.empty())
@@ -331,18 +341,10 @@ namespace panda
 			std::cout << "Camera child \"transform\" is not found. Set to idendity transformation. " << std::endl;
 		else
 		{
-			std::pair<std::string, Matrix4f> tPair = ParseXmlTransform(transformNode);
-			mat = tPair.second;
+			std::pair<std::string, Transform> tPair = ParseXmlTransform(transformNode);
+			trans = tPair.second;
 		}
 		
-		// 创建相机对象与节点
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCamera = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		std::shared_ptr<SceneNodeCamera> pNodeCamera = std::make_shared<SceneNodeCamera>(cameraName);
-		pNodeCamera->AddSceneObjectName(cameraName);
-
-		pCamera->mNear = nearClip;
-		pCamera->mFar = farClip;
-		pNodeCamera->AppendTransform(mat);
 
 		// Filter
 		Filter* tFilter = nullptr;
@@ -363,17 +365,16 @@ namespace panda
 		if (filmNode.empty())
 		{
 			std::cout << "Camera node has no \"Film\" child node. Set Default to (1280,720). " << std::endl;
-			tFilm = CreateFilm(Vector2Di({1280, 720}), tFilter);
+			tFilm = CreateFilm(Vector2i({ 1280, 720 }), std::unique_ptr<Filter>(tFilter));
 		}
 		else
 		{
-			tFilm = ParseXmlFilm(node, tFilter);
+			tFilm = ParseXmlFilm(node, std::unique_ptr<Filter>(tFilter));
 		}
-		pCamera->mFilm = tFilm;
+		
 
-		pNodeCamera->CalcTransforms();
-		mCameras.emplace(pCamera->Name(), pCamera);
-		mCameraNodes.emplace(pNodeCamera->Name(), pNodeCamera);
+		// 创建相机对象与节点
+		mCamera = std::shared_ptr<Camera>(CreatePerspectiveCamera(trans, tFilm));
 	}
 
 	void Scene::ParseXmlShape(const pugi::xml_node& node)

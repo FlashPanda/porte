@@ -63,6 +63,8 @@ namespace porte
 	WhittedIntegrator* CreateWhittedIntegrator(std::shared_ptr<Sampler> sampler,
 		std::shared_ptr<const Camera> camera)
 	{
-		return new WhittedIntegrator();
+		Bounds2i pixelBounds = camera->film->GetSampleBounds();
+
+		return new WhittedIntegrator(camera, sampler, pixelBounds);
 	}
 }
