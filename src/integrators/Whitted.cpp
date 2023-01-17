@@ -4,13 +4,15 @@
 #include <core/Light.h>
 #include <core/Scene.h>
 #include <core/Camera.h>
+#include <core/Interaction.h>
 
 namespace porte
 {
-	Vector3f WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
-		Sampler& sampler, int32 depth) const
+	Spectrum WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
+		Sampler& sampler, MemoryArena& arena,
+		int depth) const
 	{
-		Vector3f L(0.f);
+		Spectrum L(0.f);
 
 		SurfaceInteraction isect;
 		if (!scene.Intersect(ray, &isect))
@@ -25,11 +27,11 @@ namespace porte
 		// 计算交点的发射光与反射光
 
 		// 初始化通用向量
-		const Vector3f n = isect.n;	// 法线
+		const Normal3f n = isect.n;	// 法线
 		Vector3f wo = isect.wo;
 
 		// 计算交点的表面散射函数
-		isect.ComputeScatteringFunctions(ray);
+		isect.ComputeScatteringFunctions(ray, arena);
 		// 体积计算
 		//if (!isect.bsdf)
 		//	return Li(isect.SpawnRay(ray.d), scene, sampler, depth);
@@ -43,14 +45,14 @@ namespace porte
 			Vector3f wi;
 			float pdf;
 			VisibilityTester visibility;
-			Vector3f Li =
+			Spectrum Li =
 				iter->Sample_Li(isect, sampler.Get2D(), &wi, &pdf, &visibility);
 
-			if (Li == Vector3f(0.f) || pdf == 0) continue;
+			if (Li.IsBlack() || pdf == 0) continue;
 
-			Vector3f f = isect.bsdf->f(wo, wi);
-			if (!(f == Vector3f(0.f)) && visibility.Unoccluded(scene))
-				L += f * Li * drjit::abs_dot(wi, n) / pdf;
+			Spectrum f = isect.bsdf->f(wo, wi);
+			if (!(f.IsBlack()) && visibility.Unoccluded(scene))
+				L += f * Li * AbsDot(wi, n) / pdf;
 				
 		}
 

@@ -68,7 +68,7 @@ namespace porte
 
 	void Scene::Render()
 	{
-		mIntegrator->Render(this);
+		mIntegrator->Render(*this);
 	}
 
 	bool Scene::Intersect(const Ray& ray, SurfaceInteraction* insec) const
