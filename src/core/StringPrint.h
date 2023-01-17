@@ -19,7 +19,7 @@ inline void stringPrintfRecursive(std::string *s, const char *fmt) {
  
     while (*c) {
         if (*c == '%') {
-            CHECK_EQ(c[1], '%');
+            //CHECK_EQ(c[1], '%');
             ++c;
         }
         *s += *c++;

@@ -4,6 +4,7 @@
 #include <pugixml.hpp>
 #include <pugiconfig.hpp>
 #include <core/porte.h>
+#include <filesystem>
 
 namespace porte
 {
@@ -59,7 +60,6 @@ namespace porte
 		std::vector<std::filesystem::path> mSearchPaths;
 
 		Integrator* mIntegrator = nullptr;
-		Sampler* mSampler = nullptr;
 
 		int32_t mMeshCount = 1;
 		int32_t mMaterialCount = 1;

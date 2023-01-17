@@ -17,7 +17,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "error.h"
 #ifdef PORTE_HAVE_MALLOC_H
 #include <malloc.h>  // for _alloca, memalign
 #endif

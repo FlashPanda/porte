@@ -172,7 +172,7 @@ void Film::WriteImage(Float splatScale) {
     
     //LOG(INFO) << "Writing image " << filename << " with bounds " <<
     //    croppedPixelBounds;
-    pbrt::WriteImage(filename, &rgb[0], croppedPixelBounds, fullResolution);
+    //pbrt::WriteImage(filename, &rgb[0], croppedPixelBounds, fullResolution);
 }
 
 Film *CreateFilm(Vector2i res, std::unique_ptr<Filter> filter) {

@@ -2,8 +2,8 @@
 
 namespace porte
 {
-	PerspectiveCamera::PerspectiveCamera(Film* film)
-		: ProjectiveCamera(film)
+	PerspectiveCamera::PerspectiveCamera(Transform trans, Film* film)
+		: ProjectiveCamera(trans, film)
 	{
 
 	}

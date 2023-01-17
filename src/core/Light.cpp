@@ -2,6 +2,8 @@
 #include <core/Light.h>
 #include <core/Scene.h>
 #include <core/Sampling.h>
+#include <core/Spectrum.h>
+#include <core/Primitive.h>
 //#include "stats.h"
 //#include "paramset.h"
 
@@ -50,7 +52,7 @@ Spectrum Light::Le(const RayDifferential &ray) const { return Spectrum(0.f); }
 
 AreaLight::AreaLight(const Transform &LightToWorld, const MediumInterface &medium,
                      int nSamples)
-    : Light((int)LightFlags::Area, LightToWorld, medium, nSamples) {
+    : Light((int)LightFlags::Area, LightToWorld, /*medium,*/ nSamples) {
     //++numAreaLights;
 }
 

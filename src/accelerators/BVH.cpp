@@ -707,8 +707,8 @@ std::shared_ptr<BVHAccel> CreateBVHAccelerator(
     else if (splitMethodName == "equal")
         splitMethod = BVHAccel::SplitMethod::EqualCounts;
     else {
-        Warning("BVH split method \"%s\" unknown.  Using \"sah\".",
-                splitMethodName.c_str());
+        //Warning("BVH split method \"%s\" unknown.  Using \"sah\".",
+        //        splitMethodName.c_str());
         splitMethod = BVHAccel::SplitMethod::SAH;
     }
 

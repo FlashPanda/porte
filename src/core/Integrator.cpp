@@ -10,6 +10,10 @@
 //#include "camera.h"
 //#include "stats.h"
 #include <core/Integrator.h>
+#include <core/Camera.h>
+#include <core/Interaction.h>
+#include <core/Reflection.h>
+#include <core/Sampler.h>
 
 namespace porte {
 
@@ -30,22 +34,27 @@ void SamplerIntegrator::Render(const Scene &scene) {
                    (sampleExtent.y + tileSize - 1) / tileSize);
     //ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
     {
-        ParallelFor2D([&](Point2i tile) {
+        //ParallelFor2D([&](Point2i tile) {
+        for (int x = 0; x < nTiles.x; ++x)
+        {
+			for (int y = 0; y < nTiles.y; ++y)
+			{
+
             // 渲染图块
 
             MemoryArena arena;
 
             // 获取块的sampler实例
-            int seed = tile.y * nTiles.x + tile.x;
+            int seed = y * nTiles.x + x;
             std::unique_ptr<Sampler> tileSampler = sampler->Clone(seed);
 
             // Compute sample bounds for tile
-            int x0 = sampleBounds.pMin.x + tile.x * tileSize;
+            int x0 = sampleBounds.pMin.x + x * tileSize;
             int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
-            int y0 = sampleBounds.pMin.y + tile.y * tileSize;
+            int y0 = sampleBounds.pMin.y + y * tileSize;
             int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
             Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
-            LOG(INFO) << "Starting image tile " << tileBounds;
+            //LOG(INFO) << "Starting image tile " << tileBounds;
 
             // Get _FilmTile_ for tile
             std::unique_ptr<FilmTile> filmTile =
@@ -54,7 +63,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
             // Loop over pixels in tile to render them
             for (Point2i pixel : tileBounds) {
                 {
-                    ProfilePhase pp(Prof::StartPixel);
+                    //ProfilePhase pp(Prof::StartPixel);
                     tileSampler->StartPixel(pixel);
                 }
 
@@ -76,7 +85,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
                         camera->GenerateRayDifferential(cameraSample, &ray);
                     ray.ScaleDifferentials(
                         1 / std::sqrt((Float)tileSampler->samplesPerPixel));
-                    ++nCameraRays;
+                    //++nCameraRays;
 
                     // Evaluate radiance along camera ray
                     Spectrum L(0.f);
@@ -84,29 +93,29 @@ void SamplerIntegrator::Render(const Scene &scene) {
 
                     // Issue warning if unexpected radiance value returned
                     if (L.HasNaNs()) {
-                        LOG(ERROR) << StringPrintf(
-                            "Not-a-number radiance value returned "
-                            "for pixel (%d, %d), sample %d. Setting to black.",
-                            pixel.x, pixel.y,
-                            (int)tileSampler->CurrentSampleNumber());
+                        //LOG(ERROR) << StringPrintf(
+                        //    "Not-a-number radiance value returned "
+                        //    "for pixel (%d, %d), sample %d. Setting to black.",
+                        //    pixel.x, pixel.y,
+                        //    (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
                     } else if (L.y() < -1e-5) {
-                        LOG(ERROR) << StringPrintf(
-                            "Negative luminance value, %f, returned "
-                            "for pixel (%d, %d), sample %d. Setting to black.",
-                            L.y(), pixel.x, pixel.y,
-                            (int)tileSampler->CurrentSampleNumber());
+                        //LOG(ERROR) << StringPrintf(
+                        //    "Negative luminance value, %f, returned "
+                        //    "for pixel (%d, %d), sample %d. Setting to black.",
+                        //    L.y(), pixel.x, pixel.y,
+                        //    (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
                     } else if (std::isinf(L.y())) {
-                          LOG(ERROR) << StringPrintf(
-                            "Infinite luminance value returned "
-                            "for pixel (%d, %d), sample %d. Setting to black.",
-                            pixel.x, pixel.y,
-                            (int)tileSampler->CurrentSampleNumber());
+                          //LOG(ERROR) << StringPrintf(
+                          //  "Infinite luminance value returned "
+                          //  "for pixel (%d, %d), sample %d. Setting to black.",
+                          //  pixel.x, pixel.y,
+                          //  (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
                     }
-                    VLOG(1) << "Camera sample: " << cameraSample << " -> ray: " <<
-                        ray << " -> L = " << L;
+                    //VLOG(1) << "Camera sample: " << cameraSample << " -> ray: " <<
+                    //    ray << " -> L = " << L;
 
                     // Add camera ray's contribution to image
                     filmTile->AddSample(cameraSample.pFilm, L, rayWeight);
@@ -116,15 +125,16 @@ void SamplerIntegrator::Render(const Scene &scene) {
                     arena.Reset();
                 } while (tileSampler->StartNextSample());
             }
-            LOG(INFO) << "Finished image tile " << tileBounds;
+            //LOG(INFO) << "Finished image tile " << tileBounds;
 
             // Merge image tile into _Film_
             camera->film->MergeFilmTile(std::move(filmTile));
-            reporter.Update();
-        }, nTiles);
-        reporter.Done();
+            //reporter.Update();
+			}
+		}
+        //reporter.Done();
     }
-    LOG(INFO) << "Rendering finished";
+    //LOG(INFO) << "Rendering finished";
 
     // Save final image after rendering
     camera->film->WriteImage();
@@ -248,4 +258,4 @@ Spectrum SamplerIntegrator::SpecularTransmit(
     return L;
 }
 
-}  // namespace pbrt
+}  // namespace porte

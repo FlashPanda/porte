@@ -1,54 +1,19 @@
-
-/*
-    pbrt source code is Copyright(c) 1998-2016
-                        Matt Pharr, Greg Humphreys, and Wenzel Jakob.
-
-    This file is part of pbrt.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    - Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    - Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-    IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- */
-
-
 // core/texture.cpp*
-#include "texture.h"
-#include "shape.h"
+#include <core/Texture.h>
+#include <core/Shape.h>
 
-namespace pbrt {
+namespace porte {
 
-// Texture Inline Functions
 inline Float SmoothStep(Float min, Float max, Float value) {
     Float v = Clamp((value - min) / (max - min), 0, 1);
     return v * v * (-2 * v + 3);
 }
 
-// Texture Forward Declarations
 inline Float Grad(int x, int y, int z, Float dx, Float dy, Float dz);
 inline Float NoiseWeight(Float t);
 
-// Perlin Noise Data
-static PBRT_CONSTEXPR int NoisePermSize = 256;
+// Perlin‘Î…˘
+static constexpr int NoisePermSize = 256;
 static int NoisePerm[2 * NoisePermSize] = {
     151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140,
     36, 103, 30, 69, 142,
@@ -84,7 +49,6 @@ static int NoisePerm[2 * NoisePermSize] = {
     121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72,
     243, 141, 128, 195, 78, 66, 215, 61, 156, 180};
 
-// Texture Method Definitions
 TextureMapping2D::~TextureMapping2D() { }
 TextureMapping3D::~TextureMapping3D() { }
 
@@ -261,4 +225,4 @@ Float Lanczos(Float x, Float tau) {
     return s * lanczos;
 }
 
-}  // namespace pbrt
+}  // namespace porte

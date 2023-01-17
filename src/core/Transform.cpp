@@ -2,9 +2,8 @@
 #include <core/transform.h>
 #include <core/interaction.h>
 
-namespace pbrt {
+namespace porte {
 
-// Matrix4x4 Method Definitions
 bool SolveLinearSystem2x2(const Float A[2][2], const Float B[2], Float *x0,
                           Float *x1) {
     Float det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
@@ -236,7 +235,7 @@ SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
     ret.n = Normalize(t(si.n));
     ret.wo = Normalize(t(si.wo));
     ret.time = si.time;
-    ret.mediumInterface = si.mediumInterface;
+    //ret.mediumInterface = si.mediumInterface;
     ret.uv = si.uv;
     ret.shape = si.shape;
     ret.dpdu = t(si.dpdu);
@@ -300,8 +299,8 @@ class Interval {
 };
 
 inline Interval Sin(const Interval &i) {
-    CHECK_GE(i.low, 0);
-    CHECK_LE(i.high, 2.0001 * Pi);
+    //CHECK_GE(i.low, 0);
+    //CHECK_LE(i.high, 2.0001 * Pi);
     Float sinLow = std::sin(i.low), sinHigh = std::sin(i.high);
     if (sinLow > sinHigh) std::swap(sinLow, sinHigh);
     if (i.low < Pi / 2 && i.high > Pi / 2) sinHigh = 1.;
@@ -310,8 +309,8 @@ inline Interval Sin(const Interval &i) {
 }
 
 inline Interval Cos(const Interval &i) {
-    CHECK_GE(i.low, 0);
-    CHECK_LE(i.high, 2.0001 * Pi);
+    //CHECK_GE(i.low, 0);
+    //CHECK_LE(i.high, 2.0001 * Pi);
     Float cosLow = std::cos(i.low), cosHigh = std::cos(i.high);
     if (cosLow > cosHigh) std::swap(cosLow, cosHigh);
     if (i.low < Pi && i.high > Pi) cosLow = -1.;
@@ -1202,7 +1201,7 @@ Bounds3f AnimatedTransform::BoundPointMotion(const Point3f &p) const {
         IntervalFindZeros(c1[c].Eval(p), c2[c].Eval(p), c3[c].Eval(p),
                           c4[c].Eval(p), c5[c].Eval(p), theta, Interval(0., 1.),
                           zeros, &nZeros);
-        CHECK_LE(nZeros, sizeof(zeros) / sizeof(zeros[0]));
+        //CHECK_LE(nZeros, sizeof(zeros) / sizeof(zeros[0]));
 
         // Expand bounding box for any motion derivative zeros found
         for (int i = 0; i < nZeros; ++i) {
@@ -1213,4 +1212,4 @@ Bounds3f AnimatedTransform::BoundPointMotion(const Point3f &p) const {
     return bounds;
 }
 
-}  // namespace pbrt
+}  // namespace porte

@@ -66,7 +66,7 @@ class CoefficientSpectrum {
 public:
     CoefficientSpectrum(Float v = 0.f) {
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] = v;
-        DCHECK(!HasNaNs());
+        //DCHECK(!HasNaNs());
     }
 #ifdef DEBUG
     CoefficientSpectrum(const CoefficientSpectrum &s) {
@@ -89,69 +89,69 @@ public:
         fprintf(f, "]");
     }
     CoefficientSpectrum &operator+=(const CoefficientSpectrum &s2) {
-        DCHECK(!s2.HasNaNs());
+        //DCHECK(!s2.HasNaNs());
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] += s2.c[i];
         return *this;
     }
     CoefficientSpectrum operator+(const CoefficientSpectrum &s2) const {
-        DCHECK(!s2.HasNaNs());
+        //DCHECK(!s2.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] += s2.c[i];
         return ret;
     }
     CoefficientSpectrum operator-(const CoefficientSpectrum &s2) const {
-        DCHECK(!s2.HasNaNs());
+        //DCHECK(!s2.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] -= s2.c[i];
         return ret;
     }
     CoefficientSpectrum operator/(const CoefficientSpectrum &s2) const {
-        DCHECK(!s2.HasNaNs());
+        //DCHECK(!s2.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) {
-          CHECK_NE(s2.c[i], 0);
+          //CHECK_NE(s2.c[i], 0);
           ret.c[i] /= s2.c[i];
         }
         return ret;
     }
     CoefficientSpectrum operator*(const CoefficientSpectrum &sp) const {
-        DCHECK(!sp.HasNaNs());
+        //DCHECK(!sp.HasNaNs());
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] *= sp.c[i];
         return ret;
     }
     CoefficientSpectrum &operator*=(const CoefficientSpectrum &sp) {
-        DCHECK(!sp.HasNaNs());
+        //DCHECK(!sp.HasNaNs());
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] *= sp.c[i];
         return *this;
     }
     CoefficientSpectrum operator*(Float a) const {
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] *= a;
-        DCHECK(!ret.HasNaNs());
+        //DCHECK(!ret.HasNaNs());
         return ret;
     }
     CoefficientSpectrum &operator*=(Float a) {
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] *= a;
-        DCHECK(!HasNaNs());
+        //DCHECK(!HasNaNs());
         return *this;
     }
     friend inline CoefficientSpectrum operator*(Float a,
                                                 const CoefficientSpectrum &s) {
-        DCHECK(!std::isnan(a) && !s.HasNaNs());
+        //DCHECK(!std::isnan(a) && !s.HasNaNs());
         return s * a;
     }
     CoefficientSpectrum operator/(Float a) const {
-        CHECK_NE(a, 0);
-        DCHECK(!std::isnan(a));
+        //CHECK_NE(a, 0);
+        //DCHECK(!std::isnan(a));
         CoefficientSpectrum ret = *this;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] /= a;
-        DCHECK(!ret.HasNaNs());
+        //DCHECK(!ret.HasNaNs());
         return ret;
     }
     CoefficientSpectrum &operator/=(Float a) {
-        CHECK_NE(a, 0);
-        DCHECK(!std::isnan(a));
+        //CHECK_NE(a, 0);
+        //DCHECK(!std::isnan(a));
         for (int i = 0; i < nSpectrumSamples; ++i) c[i] /= a;
         return *this;
     }
@@ -171,7 +171,7 @@ public:
     friend CoefficientSpectrum Sqrt(const CoefficientSpectrum &s) {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] = std::sqrt(s.c[i]);
-        DCHECK(!ret.HasNaNs());
+        //DCHECK(!ret.HasNaNs());
         return ret;
     }
     template <int n>
@@ -185,7 +185,7 @@ public:
     friend CoefficientSpectrum Exp(const CoefficientSpectrum &s) {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] = std::exp(s.c[i]);
-        DCHECK(!ret.HasNaNs());
+        //DCHECK(!ret.HasNaNs());
         return ret;
     }
     friend std::ostream &operator<<(std::ostream &os,
@@ -193,19 +193,22 @@ public:
         return os << s.ToString();
     }
     std::string ToString() const {
-        std::string str = "[ ";
+        std::stringstream str;
+        //std::string str = "[ ";
+        str << "[ "
         for (int i = 0; i < nSpectrumSamples; ++i) {
-            str += StringPrintf("%f", c[i]);
-            if (i + 1 < nSpectrumSamples) str += ", ";
+            //str += StringPrintf("%f", c[i]);
+            str << c[i];
+            if (i + 1 < nSpectrumSamples) str << ", ";
         }
-        str += " ]";
-        return str;
+        str << " ]";
+        return str.str();
     }
     CoefficientSpectrum Clamp(Float low = 0, Float high = Infinity) const {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i)
             ret.c[i] = pbrt::Clamp(c[i], low, high);
-        DCHECK(!ret.HasNaNs());
+        //DCHECK(!ret.HasNaNs());
         return ret;
     }
     Float MaxComponentValue() const {
@@ -311,7 +314,7 @@ inline CoefficientSpectrum<nSpectrumSamples> Pow(
     const CoefficientSpectrum<nSpectrumSamples> &s, Float e) {
     CoefficientSpectrum<nSpectrumSamples> ret;
     for (int i = 0; i < nSpectrumSamples; ++i) ret.c[i] = std::pow(s.c[i], e);
-    DCHECK(!ret.HasNaNs());
+    //DCHECK(!ret.HasNaNs());
     return ret;
 }
 

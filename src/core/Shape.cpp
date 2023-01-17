@@ -52,18 +52,19 @@ Float Shape::Pdf(const Interaction &ref, const Vector3f &wi) const {
 }
 
 Float Shape::SolidAngle(const Point3f &p, int nSamples) const {
-    Interaction ref(p, Normal3f(), Vector3f(), Vector3f(0, 0, 1), 0,
-                    MediumInterface{});
-    double solidAngle = 0;
-    for (int i = 0; i < nSamples; ++i) {
-        Point2f u{RadicalInverse(0, i), RadicalInverse(1, i)};
-        Float pdf;
-        Interaction pShape = Sample(ref, u, &pdf);
-        if (pdf > 0 && !IntersectP(Ray(p, pShape.p - p, .999f))) {
-            solidAngle += 1 / pdf;
-        }
-    }
-    return solidAngle / nSamples;
+    Interaction ref(p, Normal3f(), Vector3f(), Vector3f(0, 0, 1), 0/*,
+                    MediumInterface{}*/);
+    //double solidAngle = 0;
+    //for (int i = 0; i < nSamples; ++i) {
+    //    Point2f u{RadicalInverse(0, i), RadicalInverse(1, i)};
+    //    Float pdf;
+    //    Interaction pShape = Sample(ref, u, &pdf);
+    //    if (pdf > 0 && !IntersectP(Ray(p, pShape.p - p, .999f))) {
+    //        solidAngle += 1 / pdf;
+    //    }
+    //}
+    //return solidAngle / nSamples;
+    return 0.f;
 }
 
 }  // namespace porte
