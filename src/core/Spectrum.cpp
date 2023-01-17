@@ -23,8 +23,8 @@ void SortSpectrumSamples(Float *lambda, Float *vals, int n) {
 
 Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
                              Float lambdaStart, Float lambdaEnd) {
-    for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
-    CHECK_LT(lambdaStart, lambdaEnd);
+    //for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
+    //CHECK_LT(lambdaStart, lambdaEnd);
     // 处理超出范围的情况以及单个样本的情况
     if (lambdaEnd <= lambda[0]) return vals[0];
     if (lambdaStart >= lambda[n - 1]) return vals[n - 1];
@@ -39,7 +39,7 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
     // 前进到第一个相关波长段
     int i = 0;
     while (lambdaStart > lambda[i + 1]) ++i;
-    CHECK_LT(i + 1, n);
+    //CHECK_LT(i + 1, n);
 
     // 循环波长样本段并添加贡献值
     auto interp = [lambda, vals](Float w, int i) {
@@ -59,11 +59,11 @@ Float AverageSpectrumSamples(const Float *lambda, const Float *vals, int n,
 
 Float InterpolateSpectrumSamples(const Float *lambda, const Float *vals, int n,
                                  Float l) {
-    for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
+    //for (int i = 0; i < n - 1; ++i) CHECK_GT(lambda[i + 1], lambda[i]);
     if (l <= lambda[0]) return vals[0];
     if (l >= lambda[n - 1]) return vals[n - 1];
     int offset = FindInterval(n, [&](int index) { return lambda[index] <= l; });
-    CHECK(l >= lambda[offset] && l <= lambda[offset + 1]);
+    //CHECK(l >= lambda[offset] && l <= lambda[offset + 1]);
     Float t = (l - lambda[offset]) / (lambda[offset + 1] - lambda[offset]);
     return Lerp(t, vals[offset], vals[offset + 1]);
 }
@@ -831,7 +831,7 @@ void Blackbody(const Float *lambda, int n, Float T, Float *Le) {
         Float lambda5 = (l * l) * (l * l) * l;
         Le[i] = (2 * h * c * c) /
                 (lambda5 * (std::exp((h * c) / (l * kb * T)) - 1));
-        CHECK(!std::isnan(Le[i]));
+        //CHECK(!std::isnan(Le[i]));
     }
 }
 
@@ -1049,9 +1049,9 @@ const Float RGBIllum2SpectBlue[nRGB2SpectSamples] = {
 void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
                             Float lambdaMin, Float lambdaMax, int nOut,
                             Float *vOut) {
-    CHECK_GE(nOut, 2);
-    for (int i = 0; i < nIn - 1; ++i) CHECK_GT(lambdaIn[i + 1], lambdaIn[i]);
-    CHECK_LT(lambdaMin, lambdaMax);
+    //CHECK_GE(nOut, 2);
+    //for (int i = 0; i < nIn - 1; ++i) CHECK_GT(lambdaIn[i + 1], lambdaIn[i]);
+    //CHECK_LT(lambdaMin, lambdaMax);
 
     // Spacing between samples in the output distribution.
     Float delta = (lambdaMax - lambdaMin) / (nOut - 1);
@@ -1077,12 +1077,12 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
     // since we only access these virtual samples if the destination range
     // is wider than the source range.)
     auto lambdaInClamped = [&](int index) {
-        CHECK(index >= -1 && index <= nIn);
+        //CHECK(index >= -1 && index <= nIn);
         if (index == -1) {
-            CHECK_LT(lambdaMin - delta, lambdaIn[0]);
+            //CHECK_LT(lambdaMin - delta, lambdaIn[0]);
             return lambdaMin - delta;
         } else if (index == nIn) {
-            CHECK_GT(lambdaMax + delta, lambdaIn[nIn - 1]);
+            //CHECK_GT(lambdaMax + delta, lambdaIn[nIn - 1]);
             return lambdaMax + delta;
         }
         return lambdaIn[index];
@@ -1091,7 +1091,7 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
     // Due to the piecewise-constant assumption, the SPD values outside the
     // specified range are given by the valid endpoints.
     auto vInClamped = [&](int index) {
-        CHECK(index >= -1 && index <= nIn);
+        //CHECK(index >= -1 && index <= nIn);
         return vIn[Clamp(index, 0, nIn - 1)];
     };
 
@@ -1120,7 +1120,7 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
         else {
             start = FindInterval(
                 nIn, [&](int i) { return lambdaIn[i] <= lambda - delta; });
-            CHECK(start >= 0 && start < nIn);
+            //CHECK(start >= 0 && start < nIn);
         }
 
         if (lambda + delta > lambdaIn[nIn - 1])
@@ -1146,7 +1146,7 @@ void ResampleLinearSpectrum(const Float *lambdaIn, const Float *vIn, int nIn,
             // lambda.
             Float t = (lambda - lambdaInClamped(start)) /
                       (lambdaInClamped(end) - lambdaInClamped(start));
-            CHECK(t >= 0 && t <= 1);
+            //CHECK(t >= 0 && t <= 1);
             return Lerp(t, vInClamped(start), vInClamped(end));
         } else {
             // Upsampling: use a box filter and average all values in the

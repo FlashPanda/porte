@@ -9,7 +9,7 @@
 #include <core/porte.h>
 #include <core/StringPrint.h>
 
-namespace pbrt {
+namespace porte {
 
 static const int sampledLambdaStart = 400;
 static const int sampledLambdaEnd = 700;
@@ -263,7 +263,7 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
         s.c[0] = rgb[0];
         s.c[1] = rgb[1];
         s.c[2] = rgb[2];
-        DCHECK(!s.HasNaNs());
+        //DCHECK(!s.HasNaNs());
         return s;
     }
     void ToRGB(Float *rgb) const {

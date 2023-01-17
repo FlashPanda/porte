@@ -3,9 +3,9 @@
 
 namespace porte
 {
-	PointLight::PointLight(const Matrix4f& LocalToWorld, const Vector3f& I)
-		: Light((int32)LightFlags::DeltaPosition, LocalToWorld),
-		pLight(LocalToWorld * Vector3f(0.f)),
+	PointLight::PointLight(const Transform& LocalToWorld, const Spectrum& I)
+		: Light((int)LightFlags::DeltaPosition, LocalToWorld),
+		pLight(LocalToWorld(Point3f(0.f, 0.f, 0.f))),
 		I(I)
 	{
 	}
@@ -42,7 +42,7 @@ namespace porte
 		*pdfDir = UniformSpherePdf();
 	}
 
-	std::shared_ptr<PointLight> CreatePointLight(const Matrix4f& local2world, const Vector3f& color,
+	std::shared_ptr<PointLight> CreatePointLight(const Transform& local2world, const Vector3f& color,
 		float intensity)
 	{
 		Vector3f I = color * intensity;

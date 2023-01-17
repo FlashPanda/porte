@@ -11,10 +11,11 @@ namespace porte
 	{
 	public:
 
-		std::unordered_map<std::string, std::shared_ptr<Material>> mBSDFMaterials;
+		std::unordered_map<std::string, std::shared_ptr<Material>> mMaterials;
 		std::vector<std::shared_ptr<Primitive>> mPrimitives;
-		std::vector<std::shared_ptr<Light>> mPbrtLights;
+		std::vector<std::shared_ptr<Light>> mLights;
 		std::shared_ptr<Primitive> mAggregate;
+		std::vector<std::shared_ptr<Shape>>	mShapes;
 
 	public:
 		// 从文件中加载场景
@@ -43,27 +44,16 @@ namespace porte
 		void ParseXmlLight(const pugi::xml_node& node);
 		void CheckScene();
 
-		Vector3Df ParseVectorString(const std::string& str);
+		Vector3f ParseVectorString(const std::string& str);
 
 		void OutputNode(const pugi::xml_node& node);
 
 		std::pair<std::string, std::string> ParseXmlString(const pugi::xml_node& node);
-		std::pair<std::string, int32> ParseXmlInt(const pugi::xml_node& node);
-		std::pair<std::string, float> ParseXmlFloat(const pugi::xml_node& node);
-		std::pair<std::string, Matrix4f> ParseXmlTransform(const pugi::xml_node& node);
+		std::pair<std::string, int32_t> ParseXmlInt(const pugi::xml_node& node);
+		std::pair<std::string, Float> ParseXmlFloat(const pugi::xml_node& node);
+		std::pair<std::string, Transform> ParseXmlTransform(const pugi::xml_node& node);
 
 		std::vector<std::string> Split(const std::string& s, const std::string& delimiters = " ");
-
-#pragma region 测试
-
-	public:
-		void CreateTestScene1();
-		void CreateTestScene2();
-		void CreateTestScene3();
-		void CreateTestScene4();
-
-		
-#pragma endregion
 
 	private:
 		std::vector<std::filesystem::path> mSearchPaths;
@@ -71,8 +61,8 @@ namespace porte
 		Integrator* mIntegrator = nullptr;
 		Sampler* mSampler = nullptr;
 
-		int32 mMeshCount = 1;
-		int32 mMaterialCount = 1;
+		int32_t mMeshCount = 1;
+		int32_t mMaterialCount = 1;
 		std::shared_ptr<Sampler> mSampler;
 		std::shared_ptr<Camera> mCamera;
 	};

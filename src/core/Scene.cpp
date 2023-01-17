@@ -28,6 +28,10 @@
 #include <core/Film.h>
 #include <samplers/Random.h>
 #include <cameras/Perspective.h>
+#include <materials/Matte.h>
+#include <core/Spectrum.h>
+#include <lights/Point.h>
+#include <core/ObjLoader.h>
 
 namespace porte
 {
@@ -379,15 +383,9 @@ namespace porte
 
 	void Scene::ParseXmlShape(const pugi::xml_node& node)
 	{
-		static int32 shapeIndex = 1;
-		pugi::xml_attribute typeAttr = node.attribute("type");
-		if (typeAttr.empty())
-		{
-			std::cout << "Shape node has no \"type\" attribute. " << std::endl;
-			return;
-		}
-		std::string type = typeAttr.as_string();
+		static int32_t shapeIndex = 1;
 
+		// 解析shape名
 		std::string shapeName;
 		pugi::xml_node nodename = node.child("name");
 		if (nodename.empty())
@@ -412,9 +410,50 @@ namespace porte
 			}
 		}
 
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(shapeName);
-		std::shared_ptr<SceneNodeMesh> pNodeMesh = std::make_shared<SceneNodeMesh>(shapeName);
+		// 解析变换
+		pugi::xml_node transformNode = node.child("transform");
+		Transform trans({
+				1.f, 0.f, 0.f, 0.f,
+				0.f, 1.f, 0.f, 0.f,
+				0.f, 0.f, 1.f, 0.f,
+				0.f, 0.f, 0.f, 1.f
+			});
+		if (!transformNode.empty())
+		{
+			//std::pair<std::string, Matrix4f> tPair = ParseXmlTransform(transformNode);
+			//pNodeMesh->AppendTransform(tPair.second);
+		}
 
+		// 解析引用的材质名
+		pugi::xml_node refMaterialNode = node.child("ref_material");
+		std::string matName;
+		if (refMaterialNode.empty())
+		{
+			std::cout << "shape node has no ref_material child. Set default to \"default\" material. " << std::endl;
+			matName = "default";
+		}
+		else
+		{
+			pugi::xml_attribute attrMat = refMaterialNode.attribute("name");
+			if (attrMat.empty())
+			{
+				std::cout << "shape child ref_material child has no \"name\" property. Set default to \"default\" material. " << std::endl;
+				matName = "default";
+			}
+			else
+			{
+				matName = attrMat.as_string();
+			}
+		}
+
+		// 解析type
+		pugi::xml_attribute typeAttr = node.attribute("type");
+		if (typeAttr.empty())
+		{
+			std::cout << "Shape node has no \"type\" attribute. " << std::endl;
+			return;
+		}
+		std::string type = typeAttr.as_string();
 		if (type == "obj" || type == "ply")
 		{
 			std::vector<std::string> fullPaths;
@@ -449,13 +488,13 @@ namespace porte
 			}
 
 			// 搜索路径解析模型
-			for (int32 i = 0; i < fullPaths.size(); ++i)
+			for (int32_t i = 0; i < fullPaths.size(); ++i)
 			{
 				if (std::filesystem::exists(fullPaths[i]))
 				{
 					if (type == "obj")
 					{
-						ObjLoader(fullPaths[i], pMesh, pNodeMesh);
+						ObjLoader(fullPaths[i], this, &trans, &Inverse(trans));
 					}
 					else if (type == "ply")
 					{
@@ -481,7 +520,7 @@ namespace porte
 				return;
 			}
 
-			std::vector<Vector3Df> points;
+			std::vector<Point3f> points;
 			{
 				std::string str(pointsAttr.as_string());
 				std::vector<std::string> tokens = Split(str, " ");
@@ -497,10 +536,10 @@ namespace porte
 					return;
 				}
 
-				int32 nPoints = tokens.size() / 3;
-				for (int32 i = 0; i < nPoints; ++i)
+				int nPoints = tokens.size() / 3;
+				for (int i = 0; i < nPoints; ++i)
 				{
-					Vector3Df pos;
+					Point3f pos;
 					pos[0] = std::atof(tokens[i * 3 + 0].c_str());
 					pos[1] = std::atof(tokens[i * 3 + 1].c_str());
 					pos[2] = std::atof(tokens[i * 3 + 2].c_str());
@@ -523,7 +562,7 @@ namespace porte
 				return;
 			}
 
-			std::vector<Vector3Df> normals;
+			std::vector<Normal3f> normals;
 			{
 				std::string str(normalsAttr.as_string());
 				std::vector<std::string> tokens = Split(str, " ");
@@ -534,10 +573,10 @@ namespace porte
 					return;
 				}
 
-				int32 nNormals = tokens.size() / 3;
-				for (int32 i = 0; i < nNormals; ++i)
+				int nNormals = tokens.size() / 3;
+				for (int i = 0; i < nNormals; ++i)
 				{
-					Vector3Df normal;
+					Normal3f normal;
 					normal[0] = std::atof(tokens[i * 3 + 0].c_str());
 					normal[1] = std::atof(tokens[i * 3 + 1].c_str());
 					normal[2] = std::atof(tokens[i * 3 + 2].c_str());
@@ -547,7 +586,7 @@ namespace porte
 
 			// uvs （允许没有uv，但是如果要有，比如和顶点数量一致）
 			pugi::xml_node uvsNode = node.child("uvs");
-			std::vector<Vector2Df> uvs;
+			std::vector<Point2f> uvs;
 			if (uvsNode.empty())
 			{
 				std::cout << "triangle mesh has no uvs child node! Skip uvs." << std::endl;
@@ -569,10 +608,10 @@ namespace porte
 						return;
 					}
 
-					int32 count = tokens.size() / 2;
-					for (int32 i = 0; i < count; ++i)
+					int count = tokens.size() / 2;
+					for (int i = 0; i < count; ++i)
 					{
-						Vector2Df uv;
+						Point2f uv;
 						uv[0] = std::atof(tokens[i * 2 + 0].c_str());
 						uv[1] = std::atof(tokens[i * 2 + 1].c_str());
 						uvs.push_back(uv);
@@ -595,7 +634,7 @@ namespace porte
 				return;
 			}
 
-			std::vector<uint32> indices;
+			std::vector<int> indices;
 			{
 				std::string str(indicesAttr.as_string());
 				std::vector<std::string> tokens = Split(str, " ");
@@ -611,85 +650,33 @@ namespace porte
 					return;
 				}
 
-				for (int32 i = 0; i < tokens.size(); ++i)
+				for (int i = 0; i < tokens.size(); ++i)
 				{
 					indices.push_back(std::atoi(tokens[i].c_str()));
 				}
 			}
 
-			
+			//int nTriangles = indices.size() / 3;
+			//int nVertices = vertices.size();
 
-
-			pMesh->AddVertexArray(std::move(points));
-			pMesh->AddNormalArray(std::move(normals));
-			pMesh->AddUVArray(std::move(uvs));
-			pMesh->AddIndexArray(std::move(indices));
+			//std::vector<std::shared_ptr<Shape>> tShape = CreateTriangleMesh(ObjectToWorld, WorldToObject,
+			//	false, nTriangles, &indices[0], nVertices,
+			//	&vertices[0], nullptr, &normals[0], &uvs[0], nullptr, nullptr);
 		}
 		else
 		{
 			std::cout << "shape type invalid!" << std::endl;
 		}
 
-		// 解析变换
-		pugi::xml_node transformNode = node.child("transform");
-		if (transformNode.empty())
-		{
-			std::cout << "shape node has no transform. Set default to identical. " << std::endl;
-			Matrix4f mat; mat.SetIdentity();
-			pNodeMesh->AppendTransform(mat);
-		}
-		else
-		{
-			std::pair<std::string, Matrix4f> tPair = ParseXmlTransform(transformNode);
-			pNodeMesh->AppendTransform(tPair.second);
-		}
-
-		// 解析引用的材质名
-		pugi::xml_node refMaterialNode = node.child("ref_material");
-		std::string matName;
-		if (refMaterialNode.empty())
-		{
-			std::cout << "shape node has no ref_material child. Set default to \"default\" material. " << std::endl;
-			matName = "default";
-		}
-		else
-		{
-			pugi::xml_attribute attrMat = refMaterialNode.attribute("name");
-			if (attrMat.empty())
-			{
-				std::cout << "shape child ref_material child has no \"name\" property. Set default to \"default\" material. " << std::endl;
-				matName = "default";
-			}
-			else
-			{
-				matName = attrMat.as_string();
-			}
-		}
-		pMesh->SetMaterial(matName);
-		pNodeMesh->AddSceneObjectName(pMesh->Name());
-
-		mMeshes.emplace(pMesh->Name(), pMesh);
-		mMeshNodes.emplace(pNodeMesh->Name(), pNodeMesh);
-
-		// 创建Shape
-		pNodeMesh->CalculateTransform();
-		std::vector<std::shared_ptr<Shape>> tris;
-		int32 nTriangles = pMesh->GetTriangleCount();
-		tris.reserve(nTriangles);
-		for (int i = 0; i < nTriangles; ++i)
-			tris.push_back(std::make_shared<Triangle>(&(pNodeMesh->mCalculatedTransform), 
-				&(pNodeMesh->mInvCalculatedTransform),
-				pMesh, i));
-
 		// 创建Primitive
-		std::vector<std::shared_ptr<Primitive>> prims;
-		prims.reserve(tris.size());
-		for (auto it : tris)
-		{
-			prims.push_back(
-				std::make_shared<GeometricPrimitive>(it, matName));
-		}
-		mPrimitives.insert(mPrimitives.end(), prims.begin(), prims.end());
+		//std::vector<std::shared_ptr<Primitive>> prims;
+		//prims.reserve(tris.size());
+		//for (auto it : tris)
+		//{
+		//	prims.push_back(
+		//		std::make_shared<GeometricPrimitive>(it, matName));
+		//}
+		//mPrimitives.insert(mPrimitives.end(), prims.begin(), prims.end());
 	}
 
 	void Scene::ParseXmlMaterial(const pugi::xml_node& node)
@@ -717,18 +704,14 @@ namespace porte
 			if (std::string(typeAttr.as_string()) == "matte")
 			{
 				pugi::xml_attribute kdAttr = node.attribute("Kd");
-				Vector3f kd(0.f);
-				if (kdAttr.empty())
+				Float kd = 1.f;
+				if (!kdAttr.empty())
 				{
-					kd.Set(1.f);
-				}
-				else
-				{
-					kd = ParseVectorString(kdAttr.as_string());
+					kd = kdAttr.as_float(1.f);
 				}
 
 				std::shared_ptr<Material> pMaterial(CreateMatteMaterial(kd));
-				mBSDFMaterials.emplace(matName, pMaterial);
+				mMaterials.emplace(matName, pMaterial);
 			}
 			else
 			{
@@ -739,7 +722,7 @@ namespace porte
 
 	void Scene::ParseXmlLight(const pugi::xml_node& node)
 	{
-		static int32 lightIndex = 1;
+		static int32_t lightIndex = 1;
 		pugi::xml_attribute typeAttr = node.attribute("type");
 		if (typeAttr.empty())
 		{
@@ -766,12 +749,12 @@ namespace porte
 				}
 
 				// 位置
-				Vector3Df pos;
+				Vector3f pos;
 				pugi::xml_attribute posAttr = node.attribute("position");
 				if (posAttr.empty())
 				{
 					std::cout << "light node has no position attribute. Set default to origin. " << std::endl;
-					pos.Set(0.f);
+					pos.x = pos.y = pos.z = 0.f;
 				}
 				else
 				{
@@ -779,56 +762,41 @@ namespace porte
 				}
 
 				// 颜色
-				Vector3Df color;
+				Vector3f color(1.f, 1.f, 1.f);
 				pugi::xml_attribute colorAttr = node.attribute("color");
-				if (colorAttr.empty())
-				{
-					std::cout << "light node has no color attribute. Set default to 1. " << std::endl;
-					color.Set(1.0f);
-				}
-				else
+				if (!colorAttr.empty())
 				{
 					color = ParseVectorString(colorAttr.as_string());
 				}
+				Float values[3] = {color.x, color.y, color.z};
 
 				// 强度
 				float intensity = 1.f;
 				pugi::xml_attribute intensityAttr = node.attribute("intensity");
-				if (intensityAttr.empty())
+				if (!intensityAttr.empty())
 				{
-					std::cout << "light node has no intensity attribute. Set default to 1. " << std::endl;
-				}
-				else
-				{
-					intensity = intensityAttr.as_float();
+					intensity = intensityAttr.as_float(1.f);
 				}
 
-				std::shared_ptr<SceneObjectLightPoint> pLightPoint = std::make_shared<SceneObjectLightPoint>(name);
-				std::shared_ptr< SceneNodeLight> pNodeLight = std::make_shared<SceneNodeLight>(name);
+				Spectrum s = RGBSpectrum::FromRGB(values);
+				s *= intensity;
 
-				pLightPoint->mColor = Vector4Df({ color[0], color[1], color[2], 1.f });
-				pLightPoint->mIntensity = intensity;
-				pNodeLight->AppendTransform(BuildTranslationMatrix(pos));
-
-				mLights.emplace(pLightPoint->Name(), pLightPoint);
-				mLightNodes.emplace(pNodeLight->Name(), pNodeLight);
-
-				mPbrtLights.push_back(CreatePointLight(BuildTranslationMatrix(pos), color, intensity));
+				mLights.push_back(CreatePointLight(Translate(pos), s));
 			}
 		}
 	}
 
-	Vector3Df Scene::ParseVectorString(const std::string& str)
+	Vector3f Scene::ParseVectorString(const std::string& str)
 	{
 		std::vector<std::string> vecs = Split(str);
 
 		if (vecs.size() != 3)
 		{
-			return Vector3Df({0.f, 0.f, 0.f});
+			return Vector3f(1.f, 1.f, 1.f);
 		}
 		else
 		{
-			return Vector3Df({std::stof(vecs[0]), std::stof(vecs[1]), std::stof(vecs[2]) });
+			return Vector3f(std::stof(vecs[0]), std::stof(vecs[1]), std::stof(vecs[2]));
 		}
 	}
 
@@ -846,7 +814,7 @@ namespace porte
 		return std::pair<std::string, std::string>(name.value(), value.value());
 	}
 
-	std::pair<std::string, int32> Scene::ParseXmlInt(const pugi::xml_node& node)
+	std::pair<std::string, int> Scene::ParseXmlInt(const pugi::xml_node& node)
 	{
 		pugi::xml_attribute name = node.first_attribute();
 		pugi::xml_attribute value = node.last_attribute();
@@ -854,13 +822,13 @@ namespace porte
 			std::string(name.name()) != "name" || std::string(value.name()) != "value")
 		{
 			std::cout << "int node is invalid!" << std::endl;
-			return std::pair<std::string, int32>("", 0);
+			return std::pair<std::string, int>("", 0);
 		}
 
-		return std::pair<std::string, int32>(name.value(), value.as_int());
+		return std::pair<std::string, int>(name.value(), value.as_int());
 	}
 
-	std::pair<std::string, float> Scene::ParseXmlFloat(const pugi::xml_node& node)
+	std::pair<std::string, Float> Scene::ParseXmlFloat(const pugi::xml_node& node)
 	{
 		pugi::xml_attribute name = node.first_attribute();
 		pugi::xml_attribute value = node.last_attribute();
@@ -874,12 +842,12 @@ namespace porte
 		return std::pair<std::string, float>(name.value(), value.as_float());
 	}
 
-	std::pair<std::string, Matrix4f> Scene::ParseXmlTransform(const pugi::xml_node& node)
+	std::pair<std::string, Transform> Scene::ParseXmlTransform(const pugi::xml_node& node)
 	{
 		pugi::xml_attribute name = node.first_attribute();
 		if (std::string(name.name()) == "name")
 		{
-			std::vector<Matrix4f> matrixs;
+			std::vector<Transform> matrixs;
 			for (const pugi::xml_node& ch : node.children())
 			{
 				if (std::string(ch.name()) == "lookat")
@@ -889,50 +857,51 @@ namespace porte
 					if (attr.empty())
 					{
 						std::cout << "lookat node miss \"target\" attribute!" << std::endl;
-						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
+						return std::pair<std::string, Transform>(name.name(), Transform());
 					}
 					std::string str(attr.as_string());
 					std::vector<std::string> tokens = Split(str, ",");
 					if (tokens.size() < 3)
 					{
 						std::cout << "lookat node \"target\" attribute value error!" << std::endl;
-						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
+						return std::pair<std::string, Transform>(name.name(), Transform());
 					}
 					
-					Vector3Df lookat({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
+					Point3f lookat({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
 					attr = ch.attribute("origin");
 					if (attr.empty())
 					{
 						std::cout << "lookat node miss \"origin\" attribute!" << std::endl;
-						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
+						return std::pair<std::string, Transform>(name.name(), Transform());
 					}
 					str = attr.as_string();
 					tokens = Split(str, ",");
 					if (tokens.size() < 3)
 					{
 						std::cout << "lookat node \"origin\" attribute value error!" << std::endl;
-						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
+						return std::pair<std::string, Transform>(name.name(), Transform());
 					}
-					Vector3Df origin({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
+					Point3f origin({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
 					attr = ch.attribute("up");
 					if (attr.empty())
 					{
 						std::cout << "lookat node miss \"up\" attribute!" << std::endl;
-						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
+						return std::pair<std::string, Transform>(name.name(), Transform());
 					}
 					str = attr.as_string();
 					tokens = Split(str, ",");
 					if (tokens.size() < 3)
 					{
 						std::cout << "lookat node \"up\" attribute value error!" << std::endl;
-						return std::pair<std::string, Matrix4f>(name.name(), Matrix4f());
+						return std::pair<std::string, Transform>(name.name(), Transform());
 					}
-					Vector3Df up({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
+					Vector3f up({ std::stof(tokens[0]) , std::stof(tokens[1]) , std::stof(tokens[2]) });
 
-					Matrix4f mat = BuildViewMatrixRH(origin, lookat, up);
-					return std::pair<std::string, Matrix4f>(name.name(), mat);
+					Transform mat = LookAt(origin, lookat, up);
+					
+					return std::pair<std::string, Transform>(name.name(), mat);
 				}
 				else if (std::string(ch.name()) == "rotate")
 				{
@@ -942,11 +911,12 @@ namespace porte
 					float y = attr.as_float();
 					attr = ch.attribute("z");
 					float z = attr.as_float();
-					Vector3Df vec({x, y, z});
+					Vector3f vec({x, y, z});
 
 					attr = ch.attribute("angle");
 					float angle = attr.as_float();
-					matrixs.push_back(BuildRotationAxisAngle(vec, angle));
+					
+					matrixs.push_back(Rotate(angle, vec));
 				}
 				else if (std::string(ch.name()) == "translate")
 				{
@@ -956,9 +926,9 @@ namespace porte
 					float y = attr.as_float();
 					attr = ch.attribute("z");
 					float z = attr.as_float();
-					Vector3Df vec({ x, y, z });
+					Vector3f vec({ x, y, z });
 
-					matrixs.push_back(BuildTranslationMatrix(vec));
+					matrixs.push_back(Translate(vec));
 				}
 				else if (std::string(ch.name()) == "scale")
 				{
@@ -968,9 +938,8 @@ namespace porte
 					float y = attr.as_float();
 					attr = ch.attribute("z");
 					float z = attr.as_float();
-					Vector3Df vec({ x, y, z });
-
-					matrixs.push_back(BuildScaleMatrix(vec));
+					
+					matrixs.push_back(Scale(x, y, z));
 				}
 				else if (std::string(ch.name()) == "matrix")
 				{
@@ -979,12 +948,15 @@ namespace porte
 					{
 						std::string str = attr.as_string();
 						std::vector<std::string> values = Split(str);
-						std::vector<float> vals;
-						for (int32 i = 0; i < 16; ++i)
+						std::vector<Float> vals;
+						for (int i = 0; i < 16; ++i)
 						{
 							vals.push_back(std::stof(values[i]));
 						}
-						matrixs.push_back(Matrix4f(vals));
+						matrixs.push_back(Matrix4x4(vals[0], vals[1], vals[2], vals[3],
+							vals[4], vals[5], vals[6], vals[7],
+							vals[8], vals[9], vals[10], vals[11],
+							vals[12], vals[13], vals[14], vals[15]));
 					}
 					else
 					{
@@ -997,18 +969,17 @@ namespace porte
 				}
 			}
 
-			Matrix4f temp;
-			temp.SetIdentity();
-			for (int32 i = 0; i < matrixs.size(); ++i)
+			Transform temp;
+			for (int i = 0; i < matrixs.size(); ++i)
 			{
 				temp = temp * matrixs[i];
 			}
-			return std::pair<std::string, Matrix4f>(name.value(), temp);
+			return std::pair<std::string, Transform>(name.value(), temp);
 		}
 		else
 		{
 			std::cout << "Transform name attribute is invalid!" << std::endl;
-			return std::pair<std::string, Matrix4f>("", Matrix4f());
+			return std::pair<std::string, Transform>("default", Transform());
 		}
 	}
 
@@ -1030,11 +1001,11 @@ namespace porte
 	void Scene::CheckScene()
 	{
 		// 默认积分器
-		if (mIntegrator == nullptr)
-		{
-			mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, 
-				std::shared_ptr<Sampler>(mSampler), mMainCamera);
-		}
+		//if (mIntegrator == nullptr)
+		//{
+		//	mIntegrator = CreateDirectLightingIntegrator(LightStrategy::UniformSampleOne, 5, 
+		//		std::shared_ptr<Sampler>(mSampler), mMainCamera);
+		//}
 
 	}
 
@@ -1046,416 +1017,4 @@ namespace porte
 			std::cout << "attr name = " << iter->name() << ", value = " << iter->value() << std::endl << std::endl;
 		}
 	}
-
-#pragma region 测试
-	void Scene::CreateTestScene1()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, -1.f, 0.f });
-		Vector3Df vec2({ 1.f, -1.f, 0.f });
-		Vector3Df vec3({ 1.f, 1.f, 0.f });
-		Vector3Df vec4({ -1.f, 1.f, 0.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode});
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void Scene::CreateTestScene2()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, 0.f, 1.f });
-		Vector3Df vec2({ 1.f, 0.f, 1.f });
-		Vector3Df vec3({ 1.f, 0.f, -1.f });
-		Vector3Df vec4({ -1.f, 0.f, -1.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-			}));
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode });
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void Scene::CreateTestScene3()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, 0.f, 1.f });
-		Vector3Df vec2({ 1.f, 0.f, 1.f });
-		Vector3Df vec3({ 1.f, 0.f, -1.f });
-		Vector3Df vec4({ -1.f, 0.f, -1.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			0.8660253882408142, 0, -0.5, 0,
-			0.5, 0, 0.8660253882408142, 0,
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-			}));
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode });
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void Scene::CreateTestScene4()
-	{
-		/************************************************************************/
-		/* 网格物体                                                                     */
-		/************************************************************************/
-		std::string meshName = "MyRect";
-		std::shared_ptr<SceneObjectMesh> pMesh = std::make_shared<SceneObjectMesh>(meshName);
-
-		// 顶点
-		Vector3Df vec1({ -1.f, 0.f, 1.f });
-		Vector3Df vec2({ 1.f, 0.f, 1.f });
-		Vector3Df vec3({ 1.f, 0.f, -1.f });
-		Vector3Df vec4({ -1.f, 0.f, -1.f });
-		Vector3Df vecs[4] = { vec1, vec2, vec3, vec4 };
-		pMesh->AddVertexArray(&vecs[0], 4);
-
-		// 法线
-		Vector3Df normal1({ 0.f, 0.f, 1.f });
-		Vector3Df normal2({ 0.f, 0.f, 1.f });
-		Vector3Df normal3({ 0.f, 0.f, 1.f });
-		Vector3Df normal4({ 0.f, 0.f, 1.f });
-		Vector3Df normals[4] = { normal1, normal2, normal3, normal4 };
-		pMesh->AddNormalArray(&normals[0], 4);
-
-		// uv值
-		Vector2Df uv1({ 0.f, 0.f });
-		Vector2Df uv2({ 1.f, 0.f });
-		Vector2Df uv3({ 1.f, 1.f });
-		Vector2Df uv4({ 0.f, 1.f });
-		Vector2Df uvs[4] = { uv1, uv2, uv3, uv4 };
-		pMesh->AddUVArray(&uvs[0], 4);
-
-		// 索引
-		std::vector<uint32> indices = { 0, 1, 2, 0, 2, 3 };
-		pMesh->AddIndexArray(&indices[0], 6);
-
-		// 材质
-		std::shared_ptr<Image> pImage = std::make_shared<Image>();
-		pImage->LoadFromFile("../../engine/source/textures/technology.png");
-		std::shared_ptr<SceneObjectMaterial> pMaterial = std::make_shared<SceneObjectMaterial>("Rect");
-		pMaterial->SetTexture(pImage);
-		mMaterials.insert({ "Rect", pMaterial });
-		pMesh->SetMaterial("Rect");
-
-		// 保存到列表中
-		mMeshes.insert({ meshName, pMesh });
-
-		/************************************************************************/
-		/* 网格节点                                                                     */
-		/************************************************************************/
-		std::shared_ptr<SceneNodeMesh> pMeshNode = std::make_shared<SceneNodeMesh>("MyRectNode");
-		pMeshNode->AddSceneObjectName(meshName);
-		pMeshNode->AppendTransform(Matrix4f({
-			0.8660253882408142, 0, -0.5, 0,
-			0.5, 0, 0.8660253882408142, 0,
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, 0.f, 1.f
-			}));
-		pMeshNode->AppendTransform(Matrix4f({
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 0.f, -5.f, 1.f
-			}));
-		mMeshNodes.insert({ "MyRectNode", pMeshNode });
-
-
-		/************************************************************************/
-		/* 相机物体                                                                     */
-		/************************************************************************/
-		std::string cameraName("MainCamera");
-		std::shared_ptr<SceneObjectPerspectiveCamera> pCameraObject = std::make_shared<SceneObjectPerspectiveCamera>(cameraName);
-		mCameras.insert({ cameraName, pCameraObject });
-
-		/************************************************************************/
-		/* 相机节点                                                                     */
-		/************************************************************************/
-		std::string cameraNodeName("MainCameraNode");
-		std::shared_ptr< SceneNodeCamera> pCameraNode = std::make_shared<SceneNodeCamera>(cameraNodeName);
-		pCameraNode->SetCameraObject(pCameraObject);
-		pCameraNode->AppendTransform(Matrix4f({
-			0.8660253882408142, 0, -0.5, 0,
-			0, 1, 0, 0, 
-			0.5, 0, 0.8660253882408142, 0,
-			2, 0, 0, 1
-			}));
-		mCameraNodes.insert({ cameraNodeName, pCameraNode });
-	}
-
-	void CreatePPMImage(std::shared_ptr<Image> pImage)
-	{
-		std::fstream file;
-		file.open("C:\\1001.ppm", std::fstream::out);
-
-		file << "P3\n";
-		file << pImage->Width << " " << pImage->Height << "\n";
-		file << "255\n";
-		char* pData = (char*)(pImage->Data);
-		if (pImage->Bitcount == 24)
-		{
-			for (uint32 i = 0; i < pImage->DataSize; ++i)
-			{
-				int32 t = 0;
-				t = t | pData[i];
-				t = t & 0xFF;
-				file << t;
-				if ((i + 1) % (3 * pImage->Width) == 0)
-					file << '\n';
-				else
-					file << ' ';
-			}
-		}
-		else if (pImage->Bitcount == 32)
-		{
-			for (uint32 i = 0; i < pImage->DataSize;)
-			{
-				int32 t = 0;
-				t = t | pData[i];
-				t = t & 0xFF;
-				file << t << ' ';
-
-				t = 0;
-				t = t | pData[i + 1];
-				t = t & 0xFF;
-				file << t << ' ';
-
-				t = 0;
-				t = t | pData[i + 2];
-				t = t & 0xFF;
-				file << t << '\n';
-
-				i += 4;
-			}
-		}
-		else
-		{
-			std::cout << "Error, bitcount != 24 and bitcount != 32" << std::endl;
-			return;
-		}
-	}
-
-	void CreatePPMImage(const Vector2Di& res, float* rgb)
-	{
-		std::fstream file;
-		file.open("C:\\1002.ppm", std::fstream::out);
-
-		file << "P3\n";
-		file << res[0] << " " << res[1] << "\n";
-		file << "255\n";
-		for (int32 y = 0; y < res[1]; ++y)
-		{
-			for (int32 x = 0; x < res[0]; ++x)
-			{
-#define TO_BYTE(v) (uint8)std::clamp(255.f * GammaCorrect(v) + 0.5f, 0.f, 255.f)
-				file << TO_BYTE(rgb[3 * (y * res[0] + x) + 0]);
-				file << TO_BYTE(rgb[3 * (y * res[0] + x) + 1]);
-				file << TO_BYTE(rgb[3 * (y * res[0] + x) + 2]);
-#undef TO_BYTE
-
-				if (x == res[0] - 1)
-					file << '\n';
-				else
-					file << ' ';
-			}
-		}
-	}
-#pragma endregion 
 }

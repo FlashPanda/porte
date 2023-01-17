@@ -1,14 +1,18 @@
 #include <core/ObjLoader.h>
 #include <vector>
+#include <core/Geometry.h>
+#include <shapes/Triangle.h>
+#include <core/Scene.h>
 
 namespace porte
 {
-	bool ObjLoader(std::string file, std::shared_ptr<SceneObjectMesh>& pMesh, std::shared_ptr<SceneNodeMesh>& pNodeMesh)
+	bool ObjLoader(std::string file, Scene* pScene, 
+		const Transform* ObjectToWorld, const Transform* WorldToObject)
 	{
 		bool  triangulate = true;	// 是否三角化
 		tinyobj::attrib_t attrib;	// 所有数据都放这里
-		std::vector<tinyobj::shape_t>	shapes;		// 所有的模型
 		std::vector<tinyobj::material_t>	materials;	// 材质
+		std::vector<tinyobj::shape_t>	shapes;		// 所有的模型
 
 		std::string warn;
 		std::string err;
@@ -35,49 +39,30 @@ namespace porte
 			return false;
  		}
 
-
-		//for (auto& index : shape.mesh.indices) {
-		//	mesh.Data.emplace_back(attribs.vertices[3 * index.vertex_index + 0]);
-		//	mesh.Data.emplace_back(attribs.vertices[3 * index.vertex_index + 1]);
-		//	mesh.Data.emplace_back(attribs.vertices[3 * index.vertex_index + 2]);
-		//	++offset;
-
-		//	if (load_normals) {
-		//		if (attribs.normals.size() == 0) {
-		//			std::cout << "Could not load normal vectors data in the '" << filename << "' file.";
-		//			return false;
-		//		}
-		//		else {
-		//			mesh.Data.emplace_back(attribs.normals[3 * index.normal_index + 0]);
-		//			mesh.Data.emplace_back(attribs.normals[3 * index.normal_index + 1]);
-		//			mesh.Data.emplace_back(attribs.normals[3 * index.normal_index + 2]);
-		//		}
-		//	}
-
 		std::string meshName;
-		std::vector<Vector3f> vertices;
-		std::vector<Vector3f> normals;
-		std::vector<uint32> indices;
-		std::vector<Vector2f> uvs;
+		std::vector<Point3f> vertices;
+		std::vector<Normal3f> normals;
+		std::vector<int> indices;
+		std::vector<Point2f> uvs;
 		for (const tinyobj::shape_t& shape : shapes)
 		{
 			meshName = shape.name;
 
 			for (const tinyobj::index_t& index : shape.mesh.indices)
 			{
-				Vector3f vertex;
+				Point3f vertex;
 				vertex[0] = attrib.vertices[3 * index.vertex_index + 0];
 				vertex[1] = attrib.vertices[3 * index.vertex_index + 1];
 				vertex[2] = attrib.vertices[3 * index.vertex_index + 2];
 
-				Vector3f normal;
+				Normal3f normal;
 				normal[0] = attrib.normals[3 * index.normal_index + 0];
 				normal[1] = attrib.normals[3 * index.normal_index + 1];
 				normal[2] = attrib.normals[3 * index.normal_index + 2];
 
 				if (index.texcoord_index != -1)
 				{
-					Vector2f uv;
+					Point2f uv;
 					uv[0] = attrib.texcoords[2 * index.texcoord_index + 0];
 					uv[1] = attrib.texcoords[2 * index.texcoord_index + 1];
 					uvs.push_back(uv);
@@ -91,15 +76,15 @@ namespace porte
 
 		if (meshName.empty())
 			meshName = "MainMesh";
-		pMesh = std::make_shared<SceneObjectMesh>(meshName);
-		pMesh->AddVertexArray(std::move(vertices));
-		pMesh->AddNormalArray(std::move(normals));
-		pMesh->AddIndexArray(std::move(indices));
-		pMesh->AddUVArray(std::move(uvs));
 
-		pNodeMesh = std::make_shared<SceneNodeMesh>(meshName);
-		// ignore material currently.
-		// pMesh->SetMaterial("materialname");
+		int nTriangles = vertices.size() / 3;
+		int nVertices = vertices.size();
+
+		std::vector<std::shared_ptr<Shape>> tShape = CreateTriangleMesh(ObjectToWorld, WorldToObject,
+			false, nTriangles, &indices[0], nVertices, 
+			&vertices[0], nullptr, &normals[0], &uvs[0], nullptr, nullptr);
+
+		pScene->mShapes.insert(pScene->mShapes.end(), tShape.begin(), tShape.end());
 
 		return true;
 	}

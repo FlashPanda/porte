@@ -1,4 +1,5 @@
 #pragma once
+#include <core/porte.h>
 #include <core/Light.h>
 
 namespace porte
@@ -6,19 +7,19 @@ namespace porte
 	class PointLight : public Light
 	{
 	public:
-		PointLight(const Matrix4f& LocalToWorld, const Vector3f& I);
-		Vector3f Sample_Li(const Interaction& ref, const Vector2f& u, Vector3f* wi,
-			float* pdf, VisibilityTester* vis) const;
-		Vector3f Power() const;
-		float Pdf_Li(const Interaction&, const Vector3f&) const;
-		Vector3f Sample_Le(const Vector2f& u1, const Vector2f& u2, float time, Ray* ray, Vector3f* nLight,
-			float* pdfPos, float* pdfDir) const;
-		void Pdf_Le(const Ray&, const Vector3f&, float* pdfPos, float* pdfDir) const;
+		PointLight(const Transform& LocalToWorld, const Spectrum& I);
+		Spectrum Sample_Li(const Interaction& ref, const Vector2f& u, Vector3f* wi,
+			Float* pdf, VisibilityTester* vis) const;
+		Spectrum Power() const;
+		Float Pdf_Li(const Interaction&, const Vector3f&) const;
+		Spectrum Sample_Le(const Point2f& u1, const Point2f& u2, float time, Ray* ray, Normal3f* nLight,
+			Float* pdfPos, Float* pdfDir) const;
+		void Pdf_Le(const Ray&, const Normal3f&, Float* pdfPos, Float* pdfDir) const;
 
 	private:
-		const Vector3f pLight;		// Œª÷√
-		const Vector3f I;	// ¡¡∂»
+		const Point3f pLight;		// Œª÷√
+		const Spectrum I;
 	};
 
-	std::shared_ptr<PointLight> CreatePointLight(const Matrix4f& local2world, const Vector3f& color, float intensity);
+	std::shared_ptr<PointLight> CreatePointLight(const Transform& local2world, const Spectrum& color);
 }
