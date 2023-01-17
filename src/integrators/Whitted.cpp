@@ -4,7 +4,7 @@
 #include <core/Light.h>
 #include <core/Scene.h>
 #include <core/Camera.h>
-#include <core/Interaction.h>
+#include <core/Reflection.h>
 
 namespace porte
 {
@@ -60,6 +60,12 @@ namespace porte
 		// TODO
 
 		return L;
+	}
+	Spectrum WhittedIntegrator::Li(const RayDifferential& ray, const Scene& scene,
+		Sampler& sampler, MemoryArena& arena,
+		int depth) const 
+	{
+		return Spectrum(1.f);
 	}
 
 	WhittedIntegrator* CreateWhittedIntegrator(std::shared_ptr<Sampler> sampler,

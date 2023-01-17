@@ -51,8 +51,8 @@ class ProjectiveCamera : public Camera {
     ProjectiveCamera(const Transform &CameraToWorld,
                      const Transform &CameraToScreen,
                      const Bounds2f &screenWindow, Float shutterOpen,
-                     Float shutterClose, Float lensr, Float focald, Film *film,
-                     const Medium *medium)
+                     Float shutterClose, Float lensr, Float focald, Film *film/*,
+                     const Medium *medium*/)
         : Camera(CameraToWorld, shutterOpen, shutterClose, film),
           CameraToScreen(CameraToScreen) {
         

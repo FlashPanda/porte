@@ -2,13 +2,13 @@
 
 namespace porte
 {
-	float BoxFilter::Evaluate(const Vector2f& p) const
+	Float BoxFilter::Evaluate(const Point2f& p) const
 	{
 		return 1.f;
 	}
 
 	Filter* CreateBoxFilter()
 	{
-		return new BoxFilter(Vector2f(0.5f, 0.5f));
+		return new BoxFilter(Vector2f({ 0.5f, 0.5f }));
 	}
 }

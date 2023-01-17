@@ -9,7 +9,7 @@ namespace porte
 	public:
 		virtual ~BoxFilter() {}
 		BoxFilter(const Vector2f& radius) : Filter(radius) {}
-		float Evaluate(const Vector2f& p) const;
+		Float Evaluate(const Point2f& p) const;
 	};
 
 	Filter* CreateBoxFilter();

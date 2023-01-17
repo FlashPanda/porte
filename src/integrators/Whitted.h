@@ -14,6 +14,9 @@ namespace porte
 			: SamplerIntegrator(camera, sampler, pixelBounds) {}
 		Spectrum Li(const Ray& ray, const Scene& scene,
 			Sampler& sampler, MemoryArena& arena, int depth = 0) const;
+		Spectrum Li(const RayDifferential& ray, const Scene& scene,
+			Sampler& sampler, MemoryArena& arena,
+			int depth = 0) const;
 	};
 
 	WhittedIntegrator* CreateWhittedIntegrator(std::shared_ptr<Sampler> sampler,
