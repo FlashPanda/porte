@@ -1,23 +1,3 @@
-//#include "Scene.h"
-//#include "SceneObject.h"
-//#include "SceneNode.h"
-//#include "SceneObjectCamera.h"
-//#include "SceneNodeCamera.h"
-//#include "SceneObjectMaterial.h"
-//#include "SceneObjectMesh.h"
-//#include "SceneNodeMesh.h"
-//#include "SceneNodeLight.h"
-//#include "SceneObjectLight.h"
-//
-//#include "Integrator.h"
-//#include "Sampler.h"
-//#include "ObjLoader.h"
-//#include "Ray.h"
-//#include "Interaction.h"
-//#include "Shape.h"
-//#include "Primitive.h"
-//#include "Light.h"
-
 #include <fstream>
 #include <filesystem>	// c++ 17
 #include <iostream>
@@ -52,16 +32,6 @@ namespace porte
 		{
 			ParseXmlScene(filename);
 
-			// 可以想办法直接把材质定义在mesh之前，这样就可以直接用材质构造了。
-			//for (auto it : mPrimitives)
-			//{
-			//	std::shared_ptr<GeometricPrimitive> ptr = std::static_pointer_cast<GeometricPrimitive>(it);
-			//	if (mBSDFMaterials.at(ptr->GetMatName()))
-			//	{
-			//		ptr->MaterialRedirection(mBSDFMaterials[ptr->GetMatName()]);
-			//	}
-			//}
-			//mAggregate = CreateBVHAccelerator(std::move(mPrimitives));
 		}
 		else
 		{
@@ -733,13 +703,14 @@ namespace porte
 			if (std::string(typeAttr.as_string()) == "matte")
 			{
 				pugi::xml_attribute kdAttr = node.attribute("Kd");
-				Float kd = 1.f;
+				Vector3f kd(1.f, 1.f, 1.f);
 				if (!kdAttr.empty())
 				{
-					kd = kdAttr.as_float(1.f);
+					kd = ParseVectorString(kdAttr.as_string("1.f 1.f 1.f"));
 				}
 
-				std::shared_ptr<Material> pMaterial(CreateMatteMaterial(kd));
+				Spectrum sp = RGBSpectrum::FromRGB(&kd[0]);
+				std::shared_ptr<Material> pMaterial(CreateMatteMaterial(sp));
 				mMaterials.emplace(matName, pMaterial);
 			}
 			else

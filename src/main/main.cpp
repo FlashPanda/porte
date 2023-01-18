@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+
 	porte::Scene scene;
 
 	scene.LoadSceneFromFile(argv[1]);

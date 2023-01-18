@@ -24,9 +24,9 @@ void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         //    si->bsdf->Add(ARENA_ALLOC(arena, OrenNayar)(r, sig));
     }
 
-MatteMaterial *CreateMatteMaterial(Float kd) {
+MatteMaterial *CreateMatteMaterial(Spectrum kd) {
     std::shared_ptr<Texture<Spectrum>> Kd =
-        std::make_shared<ConstantTexture<Spectrum>>(Spectrum(kd));
+        std::make_shared<ConstantTexture<Spectrum>>(kd);
     return new MatteMaterial(Kd);
 }
 
