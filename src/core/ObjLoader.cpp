@@ -6,7 +6,7 @@
 
 namespace porte
 {
-	bool ObjLoader(std::string file, Scene* pScene, 
+	std::vector<std::shared_ptr<Shape>> ObjLoader(std::string file,
 		const Transform* ObjectToWorld, const Transform* WorldToObject)
 	{
 		bool  triangulate = true;	// 是否三角化
@@ -22,7 +22,7 @@ namespace porte
 		if (!bRead)
 		{
 			std::cout << "Read file \"" << file << "\" failed! " << std::endl;
-			return false;
+			return std::vector<std::shared_ptr<Shape>>();
 		}
 		
 		// 输出读取的模型信息
@@ -36,7 +36,7 @@ namespace porte
 		if (attrib.normals.size() == 0)
 		{
 			std::cout << "file has no normals! " << std::endl;
-			return false;
+			return std::vector<std::shared_ptr<Shape>>();
  		}
 
 		std::string meshName;
@@ -82,10 +82,8 @@ namespace porte
 
 		std::vector<std::shared_ptr<Shape>> tShape = CreateTriangleMesh(ObjectToWorld, WorldToObject,
 			false, nTriangles, &indices[0], nVertices, 
-			&vertices[0], nullptr, &normals[0], &uvs[0], nullptr, nullptr);
+			&vertices[0], nullptr, &normals[0], uvs.size() > 0?  &uvs[0] : nullptr, nullptr, nullptr);
 
-		pScene->mShapes.insert(pScene->mShapes.end(), tShape.begin(), tShape.end());
-
-		return true;
+		return std::move(tShape);
 	}
 }

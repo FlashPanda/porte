@@ -63,12 +63,12 @@ bool TransformedPrimitive::IntersectP(const Ray &r) const {
 }
 
 GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                                       const std::shared_ptr<Material> &material,
-                                       const std::shared_ptr<AreaLight> &areaLight/*,
+                                       const std::shared_ptr<Material> &material/*,
+                                       const std::shared_ptr<AreaLight>& areaLight,
                                        const MediumInterface &mediumInterface*/)
     : shape(shape),
-    material(material),
-    areaLight(areaLight)/*,
+    material(material)/*,
+    areaLight(areaLight),
     mediumInterface(mediumInterface) */{
     //primitiveMemory += sizeof(*this);
 }

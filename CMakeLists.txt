@@ -33,6 +33,7 @@ FILE (GLOB PORTE_SOURCE
 	src/shapes/*
 	src/materials/*
 	src/textures/*
+	src/ext/*
 )
 
 # Visual Sutdio source folders
@@ -46,6 +47,7 @@ SOURCE_GROUP (samplers REGULAR_EXPRESSION src/samplers/.*)
 SOURCE_GROUP (shapes REGULAR_EXPRESSION src/shapes/.*)
 SOURCE_GROUP (materials REGULAR_EXPRESSION src/materials/*)
 SOURCE_GROUP (textures REGULAR_EXPRESSION src/textures/*)
+SOURCE_GROUP (ext REGULAR_EXPRESSION src/ext/*)
 
 add_library(porte STATIC
 	${PORTE_SOURCE}

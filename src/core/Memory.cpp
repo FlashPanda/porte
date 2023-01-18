@@ -16,11 +16,11 @@ void *AllocAligned(size_t size) {
 
 void FreeAligned(void *ptr) {
     if (!ptr) return;
-#if defined(PORTE_HAVE__ALIGNED_MALLOC)
+//#if defined(PORTE_HAVE__ALIGNED_MALLOC)
     _aligned_free(ptr);
-#else
-    free(ptr);
-#endif
+//#else
+//    free(ptr);
+//#endif
 }
 
 }  // namespace porte

@@ -32,6 +32,9 @@
 #include <core/Spectrum.h>
 #include <lights/Point.h>
 #include <core/ObjLoader.h>
+#include <shapes/Triangle.h>
+#include <core/Primitive.h>
+#include <accelerators/BVH.h>
 
 namespace porte
 {
@@ -71,15 +74,15 @@ namespace porte
 		mIntegrator->Render(*this);
 	}
 
-	bool Scene::Intersect(const Ray& ray, SurfaceInteraction* insec) const
+	bool Scene::Intersect(const Ray& ray, SurfaceInteraction* isect) const
 	{
-		return false;
+		return mAggregate? mAggregate->Intersect(ray, isect) : false;
 	}
 
 	// 是否相交
 	bool Scene::IntersectP(const Ray& ray) const
 	{
-		return false;
+		return mAggregate? mAggregate->IntersectP(ray) : false;
 	}
 
 	void Scene::ParseXmlScene(const std::string filename)
@@ -148,6 +151,9 @@ namespace porte
 			else
 				std::cout << "Invalid node \"" << ch.name() << "\"" << std::endl;
 		}
+
+		// 创建加速结构
+		mAggregate = CreateBVHAccelerator(mPrimitives);
 
 		CheckScene();
 	}
@@ -360,20 +366,20 @@ namespace porte
 		}
 		else
 		{
-			tFilter = ParseXmlFilter(node);
+			tFilter = ParseXmlFilter(filterNode);
 		}
 
 		// Film
 		Film* tFilm = nullptr;
-		pugi::xml_node filmNode = node.child("Film");
+		pugi::xml_node filmNode = node.child("film");
 		if (filmNode.empty())
 		{
-			std::cout << "Camera node has no \"Film\" child node. Set Default to (1280,720). " << std::endl;
+			std::cout << "Camera node has no \"film\" child node. Set Default to (1280,720). " << std::endl;
 			tFilm = CreateFilm(Vector2i({ 1280, 720 }), std::unique_ptr<Filter>(tFilter));
 		}
 		else
 		{
-			tFilm = ParseXmlFilm(node, std::unique_ptr<Filter>(tFilter));
+			tFilm = ParseXmlFilm(filmNode, std::unique_ptr<Filter>(tFilter));
 		}
 		
 
@@ -494,7 +500,18 @@ namespace porte
 				{
 					if (type == "obj")
 					{
-						ObjLoader(fullPaths[i], this, &trans, &Inverse(trans));
+						std::vector<std::shared_ptr<Shape>> tShapes = ObjLoader(fullPaths[i], &trans, &Inverse(trans));
+
+						mShapes.insert(mShapes.end(), tShapes.begin(), tShapes.end());
+
+						// 创建Primitive
+						std::vector<std::shared_ptr<Primitive>> prims;
+						prims.reserve(tShapes.size());
+						for (auto it : tShapes)
+						{
+							prims.push_back(std::make_shared<GeometricPrimitive>(it, mMaterials[matName]));
+						}
+						mPrimitives.insert(mPrimitives.end(), prims.begin(), prims.end());
 					}
 					else if (type == "ply")
 					{
@@ -656,27 +673,39 @@ namespace porte
 				}
 			}
 
-			//int nTriangles = indices.size() / 3;
-			//int nVertices = vertices.size();
+			Transform trans;
 
-			//std::vector<std::shared_ptr<Shape>> tShape = CreateTriangleMesh(ObjectToWorld, WorldToObject,
-			//	false, nTriangles, &indices[0], nVertices,
-			//	&vertices[0], nullptr, &normals[0], &uvs[0], nullptr, nullptr);
+			int nTriangles = indices.size() / 3;
+			std::vector<Point3f> vertices;
+			std::vector<Normal3f> normalss;
+			std::vector<Point2f> uvss;
+
+			for (int i = 0; i < indices.size(); ++i)
+			{
+				vertices.push_back(points[indices[i]]);
+				normalss.push_back(normals[indices[i]]);
+				uvss.push_back(uvs[indices[i]]);
+			}
+
+			std::vector<std::shared_ptr<Shape>> tShape = CreateTriangleMesh(&trans, &Inverse(trans),
+				false, nTriangles, &indices[0], nTriangles,
+				&vertices[0], nullptr, &normals[0], uvss.size() > 0?  &uvss[0] : nullptr, nullptr, nullptr);
+
+			mShapes.insert(mShapes.end(), tShape.begin(), tShape.end());
+
+			// 创建Primitive
+			std::vector<std::shared_ptr<Primitive>> prims;
+			prims.reserve(tShape.size());
+			for (auto it : tShape)
+			{
+				prims.push_back(std::make_shared<GeometricPrimitive>(it, mMaterials[matName]));
+			}
+			mPrimitives.insert(mPrimitives.end(), prims.begin(), prims.end());
 		}
 		else
 		{
 			std::cout << "shape type invalid!" << std::endl;
 		}
-
-		// 创建Primitive
-		//std::vector<std::shared_ptr<Primitive>> prims;
-		//prims.reserve(tris.size());
-		//for (auto it : tris)
-		//{
-		//	prims.push_back(
-		//		std::make_shared<GeometricPrimitive>(it, matName));
-		//}
-		//mPrimitives.insert(mPrimitives.end(), prims.begin(), prims.end());
 	}
 
 	void Scene::ParseXmlMaterial(const pugi::xml_node& node)

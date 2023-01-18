@@ -35,8 +35,8 @@ class GeometricPrimitive : public Primitive {
     virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
     virtual bool IntersectP(const Ray &r) const;
     GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                       const std::shared_ptr<Material> &material,
-                       const std::shared_ptr<AreaLight> &areaLight/*,
+                       const std::shared_ptr<Material> &material/*,
+                       const std::shared_ptr<AreaLight> &areaLight,
                        const MediumInterface &mediumInterface*/);
     const AreaLight *GetAreaLight() const;
     const Material *GetMaterial() const;
