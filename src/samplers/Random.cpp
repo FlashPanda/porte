@@ -11,4 +11,11 @@ namespace porte
 	{
 		return Point2f(rng.UniformFloat(), rng.UniformFloat());
 	}
+
+	std::unique_ptr<Sampler> RandomSampler::Clone(int seed)
+	{
+		RandomSampler* rs = new RandomSampler(*this);
+		rs->rng.SetSequence(seed);
+		return std::unique_ptr<Sampler>(rs);
+	}
 }

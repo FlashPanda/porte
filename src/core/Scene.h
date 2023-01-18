@@ -5,6 +5,7 @@
 #include <pugiconfig.hpp>
 #include <core/porte.h>
 #include <filesystem>
+#include <core/Geometry.h>
 
 namespace porte
 {

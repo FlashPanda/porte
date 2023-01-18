@@ -8,6 +8,7 @@
 
 #include <core/porte.h>
 #include <core/StringPrint.h>
+#include <sstream>
 
 namespace porte {
 
@@ -195,7 +196,7 @@ public:
     std::string ToString() const {
         std::stringstream str;
         //std::string str = "[ ";
-        str << "[ "
+        str << "[ ";
         for (int i = 0; i < nSpectrumSamples; ++i) {
             //str += StringPrintf("%f", c[i]);
             str << c[i];
@@ -207,7 +208,7 @@ public:
     CoefficientSpectrum Clamp(Float low = 0, Float high = Infinity) const {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i)
-            ret.c[i] = pbrt::Clamp(c[i], low, high);
+            ret.c[i] = porte::Clamp(c[i], low, high);
         //DCHECK(!ret.HasNaNs());
         return ret;
     }

@@ -378,7 +378,7 @@ namespace porte
 		
 
 		// 创建相机对象与节点
-		mCamera = std::shared_ptr<Camera>(CreatePerspectiveCamera(trans, tFilm));
+		mCamera = std::shared_ptr<Camera>(CreatePerspectiveCamera(trans, tFilm, 90.f));
 	}
 
 	void Scene::ParseXmlShape(const pugi::xml_node& node)

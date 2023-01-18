@@ -12,6 +12,8 @@ namespace porte
 		virtual float Get1D();
 		virtual Point2f Get2D();
 
+		virtual std::unique_ptr<Sampler> Clone(int seed);
+
 	private:
 		RNG rng;
 	};

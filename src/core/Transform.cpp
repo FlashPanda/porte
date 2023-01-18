@@ -63,8 +63,8 @@ Matrix4x4 Inverse(const Matrix4x4 &m) {
                             irow = j;
                             icol = k;
                         }
-                    } else if (ipiv[k] > 1)
-                        Error("Singular matrix in MatrixInvert");
+                    } //else if (ipiv[k] > 1)
+                        //Error("Singular matrix in MatrixInvert");
                 }
             }
         }
@@ -75,7 +75,7 @@ Matrix4x4 Inverse(const Matrix4x4 &m) {
         }
         indxr[i] = irow;
         indxc[i] = icol;
-        if (minv[icol][icol] == 0.f) Error("Singular matrix in MatrixInvert");
+        //if (minv[icol][icol] == 0.f) Error("Singular matrix in MatrixInvert");
 
         // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
         Float pivinv = 1. / minv[icol][icol];
@@ -177,11 +177,11 @@ Transform LookAt(const Point3f &pos, const Point3f &look, const Vector3f &up) {
     // Initialize first three columns of viewing matrix
     Vector3f dir = Normalize(look - pos);
     if (Cross(Normalize(up), dir).Length() == 0) {
-        Error(
-            "\"up\" vector (%f, %f, %f) and viewing direction (%f, %f, %f) "
-            "passed to LookAt are pointing in the same direction.  Using "
-            "the identity transformation.",
-            up.x, up.y, up.z, dir.x, dir.y, dir.z);
+        //Error(
+        //    "\"up\" vector (%f, %f, %f) and viewing direction (%f, %f, %f) "
+        //    "passed to LookAt are pointing in the same direction.  Using "
+        //    "the identity transformation.",
+        //    up.x, up.y, up.z, dir.x, dir.y, dir.z);
         return Transform();
     }
     Vector3f right = Normalize(Cross(Normalize(up), dir));

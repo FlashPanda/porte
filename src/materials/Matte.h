@@ -24,7 +24,7 @@ class MatteMaterial : public Material {
     std::shared_ptr<Texture<Spectrum>> Kd;
 };
 
-MatteMaterial *CreateMatteMaterial(Float kd);
+MatteMaterial* CreateMatteMaterial(Float kd);
 
 }  // namespace porte
 

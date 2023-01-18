@@ -90,11 +90,11 @@ template <int nSpectrumSamples>
 class CoefficientSpectrum;
 class RGBSpectrum;
 class SampledSpectrum;
-#ifdef PORTE_SAMPLED_SPECTRUM
-  typedef SampledSpectrum Spectrum;
-#else
+//#ifdef PORTE_SAMPLED_SPECTRUM
+//  typedef SampledSpectrum Spectrum;
+//#else
   typedef RGBSpectrum Spectrum;
-#endif
+//#endif
 class Camera;
 struct CameraSample;
 class ProjectiveCamera;

@@ -4,6 +4,8 @@
 #include <core/Interaction.h>
 #include <core/Texture.h>
 #include <core/Interaction.h>
+#include <core/Spectrum.h>
+#include <textures/Constant.h>
 
 namespace porte {
 
@@ -21,7 +23,6 @@ void MatteMaterial::ComputeScatteringFunctions(SurfaceInteraction *si,
         //else
         //    si->bsdf->Add(ARENA_ALLOC(arena, OrenNayar)(r, sig));
     }
-}
 
 MatteMaterial *CreateMatteMaterial(Float kd) {
     std::shared_ptr<Texture<Spectrum>> Kd =
