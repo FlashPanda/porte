@@ -238,4 +238,4 @@ PerspectiveCamera *CreatePerspectiveCamera(const Transform &cam2world,
                                  lensradius, focaldistance,*/ fov, film/*, medium*/);
 }
 
-}  // namespace pbrt
+}  // namespace porte

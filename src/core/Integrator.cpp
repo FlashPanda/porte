@@ -56,16 +56,14 @@ void SamplerIntegrator::Render(const Scene &scene) {
             Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
             //LOG(INFO) << "Starting image tile " << tileBounds;
 
-            // Get _FilmTile_ for tile
             std::unique_ptr<FilmTile> filmTile =
                 camera->film->GetFilmTile(tileBounds);
 
-            // Loop over pixels in tile to render them
             for (Point2i pixel : tileBounds) {
-                {
+                //{
                     //ProfilePhase pp(Prof::StartPixel);
                     tileSampler->StartPixel(pixel);
-                }
+                //}
 
                 // Do this check after the StartPixel() call; this keeps
                 // the usage of RNG values from (most) Samplers that use
@@ -75,11 +73,10 @@ void SamplerIntegrator::Render(const Scene &scene) {
                     continue;
 
                 do {
-                    // Initialize _CameraSample_ for current sample
                     CameraSample cameraSample =
                         tileSampler->GetCameraSample(pixel);
 
-                    // Generate camera ray for current sample
+                    // 生成当前样本的相机射线
                     RayDifferential ray;
                     Float rayWeight =
                         camera->GenerateRayDifferential(cameraSample, &ray);
@@ -87,11 +84,11 @@ void SamplerIntegrator::Render(const Scene &scene) {
                         1 / std::sqrt((Float)tileSampler->samplesPerPixel));
                     //++nCameraRays;
 
-                    // Evaluate radiance along camera ray
+                    // 沿着相机射线计算radiance
                     Spectrum L(0.f);
                     if (rayWeight > 0) L = Li(ray, scene, *tileSampler, arena);
 
-                    // Issue warning if unexpected radiance value returned
+                    // 非法radiance值的提醒
                     if (L.HasNaNs()) {
                         //LOG(ERROR) << StringPrintf(
                         //    "Not-a-number radiance value returned "
@@ -117,17 +114,16 @@ void SamplerIntegrator::Render(const Scene &scene) {
                     //VLOG(1) << "Camera sample: " << cameraSample << " -> ray: " <<
                     //    ray << " -> L = " << L;
 
-                    // Add camera ray's contribution to image
+                    // 增加相机的射线贡献到图像中
                     filmTile->AddSample(cameraSample.pFilm, L, rayWeight);
 
-                    // Free _MemoryArena_ memory from computing image sample
-                    // value
+                    // 从计算的图像样本值释放内存
                     arena.Reset();
                 } while (tileSampler->StartNextSample());
             }
             //LOG(INFO) << "Finished image tile " << tileBounds;
 
-            // Merge image tile into _Film_
+            // 合并图像块
             camera->film->MergeFilmTile(std::move(filmTile));
             //reporter.Update();
 			}
@@ -136,7 +132,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
     }
     //LOG(INFO) << "Rendering finished";
 
-    // Save final image after rendering
+    // 保存图像
     camera->film->WriteImage("first.png");
 }
 

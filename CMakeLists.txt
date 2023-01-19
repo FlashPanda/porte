@@ -56,7 +56,6 @@ add_library(porte STATIC
 set (ALL_PORTE_LIBS
 	porte
 	pugixml
-	tinyobjloader
 )
 
 add_executable(porte_exe src/main/main.cpp)

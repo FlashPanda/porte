@@ -12,8 +12,8 @@ namespace porte
 			std::shared_ptr<Sampler> sampler,
 			const Bounds2i& pixelBounds)
 			: SamplerIntegrator(camera, sampler, pixelBounds) {}
-		Spectrum Li(const Ray& ray, const Scene& scene,
-			Sampler& sampler, MemoryArena& arena, int depth = 0) const;
+		//Spectrum Li(const Ray& ray, const Scene& scene,
+		//	Sampler& sampler, MemoryArena& arena, int depth = 0) const;
 		Spectrum Li(const RayDifferential& ray, const Scene& scene,
 			Sampler& sampler, MemoryArena& arena,
 			int depth = 0) const;

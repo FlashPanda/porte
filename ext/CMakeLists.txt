@@ -1,10 +1,14 @@
+###########################################################################
+# pugixml
 add_library(pugixml STATIC pugixml/src/pugixml.cpp)
 set_property(TARGET pugixml PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set_property(TARGET pugixml PROPERTY FOLDER "dependencies")
 
-add_library(tinyobjloader STATIC tinyobjloader/tiny_obj_loader.cc)
-set_property(TARGET tinyobjloader PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set_property(TARGET tinyobjloader PROPERTY FOLDER "dependencies")
+###########################################################################
+# tiny_obj_loader
+# add_library(tinyobjloader STATIC tinyobjloader/tiny_obj_loader.cc)
+# set_property(TARGET tinyobjloader PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+# set_property(TARGET tinyobjloader PROPERTY FOLDER "dependencies")
 
 ###########################################################################
 # glog

@@ -285,8 +285,7 @@ namespace porte
 		}
 
 		std::string cameraName("MainCamera");
-		float nearClip = 0.1f;
-		float farClip = 1000.f;
+		Float fov = 90.f;
 		Transform trans;
 
 		pugi::xml_node propertyNode = node.child("property");
@@ -303,17 +302,11 @@ namespace porte
 			else 
 				cameraName = attr.as_string();
 
-			attr = propertyNode.attribute("near_clip");
+			attr = propertyNode.attribute("fov");
 			if (attr.empty())
 				std::cout << "Camera property \"near_clip\" is not found. Set to default value 0.1f. " << std::endl;
 			else 
-				nearClip = attr.as_float();
-
-			attr = propertyNode.attribute("far_clip");
-			if (attr.empty())
-				std::cout << "Camera property \"far_clip\" is not found. Set to default value 1000.f. " << std::endl;
-			else 
-				farClip = attr.as_float();
+				fov = attr.as_float();
 		}
 
 		pugi::xml_node transformNode = node.child("transform");
@@ -354,7 +347,7 @@ namespace porte
 		
 
 		// 创建相机对象与节点
-		mCamera = std::shared_ptr<Camera>(CreatePerspectiveCamera(trans, tFilm, 90.f));
+		mCamera = std::shared_ptr<Camera>(CreatePerspectiveCamera(trans, tFilm, fov));
 	}
 
 	void Scene::ParseXmlShape(const pugi::xml_node& node)

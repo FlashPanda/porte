@@ -11,9 +11,9 @@ Integrator "whitted"
 
 WorldBegin
 
-LightSource "point" "point from" [ 10 0 10  ]
+LightSource "point" "point from" [ 0 0 8  ]
     "spectrum I" [1 1 1]
-    "rgb scale" [10 10 10]
+    "rgb scale" [30 30 30]
 
 AttributeBegin
   Material "matte" "color Kd" [.5 .5 .8]
@@ -25,9 +25,9 @@ Shape "trianglemesh" "point P" [ -400 -1000 -1000   -400 1000 -1000   -400 1000 
         "integer indices" [ 0 1 2 2 3 0]
 AttributeEnd
 
-AttributeBegin
-    Material "matte" "color Kd" [.5 .5 .8]
-    Include "geometry/bunny.pbrt"
-AttributeEnd
+# AttributeBegin
+#    Material "matte" "color Kd" [.5 .5 .8]
+#    Include "geometry/bunny.pbrt"
+# AttributeEnd
 
 WorldEnd

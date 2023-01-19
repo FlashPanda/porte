@@ -2,7 +2,7 @@
     <path value="../meshes"/>
 
     <camera type="perspective">
-        <property name="MainCamera" near_clip="1" far_clip="1000" fov="90" />
+        <property name="MainCamera" fov="90" />
 
         <transform name="to_world">
             <lookat target="0.0, 0.0, 0.0"
@@ -22,12 +22,14 @@
 	<material name="material1" type="plastic" Kd="0.8 0.8 0.8" Ks=".5 .5 .5" roughness="0.025"/>
 	<material name="default" type="matte" Kd="0.5 0.5 0.8" />
 	
+	<!--
     <shape type="obj">
 		<name value="bunny" />
         <filename path="bunny.obj"/>
 		
 		<ref_material name="default" />
     </shape>
+	-->
 	
 	<shape type="trianglemesh">
 		<name value="floor" />
