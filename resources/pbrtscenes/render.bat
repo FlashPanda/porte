@@ -1,2 +1,2 @@
-F:\FlashBluePanda\pbrt\build\Release\pbrt.exe --nthreads 8 --outfile bunny1.png F:\FlashBluePanda\porte\resources\pbrtscenes\bunny.pbrt
+%~dp0/../../../pbrt/build/Release/pbrt.exe --nthreads 8 --outfile bunny1.png bunny.pbrt
 

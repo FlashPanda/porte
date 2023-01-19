@@ -34,7 +34,6 @@
 	<shape type="trianglemesh">
 		<name value="floor" />
         <points value ="-1000 -1000 0 1000 -1000 0 1000 1000 0 -1000 1000 0" />
-		<normals value ="0 0 1 0 0 1 0 0 1 0 0 1" />
 		<uvs value="0 0 5 0 5 5 0 5" />
 		<indices value="0 1 2 2 3 0" />
 		
@@ -44,7 +43,6 @@
 	<shape type="trianglemesh">
 		<name value="wall" />
         <points value="-400 -1000 -1000 -400 1000 -1000 -400 1000 1000 -400 -1000 1000" />
-		<normals value="1 0 0 1 0 0 1 0 0 1 0 0" />
 		<uvs value="0 0 5 0 5 5 0 5" />
 		<indices value="0 1 2 2 3 0" />
 		

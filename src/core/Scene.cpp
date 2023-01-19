@@ -523,7 +523,7 @@ namespace porte
 					pos[0] = std::atof(tokens[i * 3 + 0].c_str());
 					pos[1] = std::atof(tokens[i * 3 + 1].c_str());
 					pos[2] = std::atof(tokens[i * 3 + 2].c_str());
-					points.push_back(std::move(pos));
+					points.emplace_back(pos);
 				}
 			}
 
@@ -639,20 +639,16 @@ namespace porte
 			Transform trans;
 
 			int nTriangles = indices.size() / 3;
-			std::vector<Point3f> vertices;
-			std::vector<Normal3f> normalss;
-			std::vector<Point2f> uvss;
 
-			for (int i = 0; i < indices.size(); ++i)
-			{
-				vertices.push_back(points[indices[i]]);
-				normalss.push_back(normals[indices[i]]);
-				uvss.push_back(uvs[indices[i]]);
-			}
-
+			//const Transform* o2w, const Transform* w2o, bool reverseOrientation,
+			//	int nTriangles, const int* vertexIndices, int nVertices, const Point3f* p,
+			//	const Vector3f* s, const Normal3f* n, const Point2f* uv,
+			//	const std::shared_ptr<Texture<Float>>& alphaTexture,
+			//	const std::shared_ptr<Texture<Float>>& shadowAlphaTexture,
+			//	const int* faceIndices = nullptr)
 			std::vector<std::shared_ptr<Shape>> tShape = CreateTriangleMesh(&trans, &Inverse(trans),
-				false, nTriangles, &indices[0], nTriangles,
-				&vertices[0], nullptr, &normals[0], uvss.size() > 0?  &uvss[0] : nullptr, nullptr, nullptr);
+				false, nTriangles, &indices[0], points.size(),
+				&points[0], nullptr, normals.size()> 0? &normals[0] : nullptr, uvs.size() > 0 ? &uvs[0] : nullptr, nullptr, nullptr);
 
 			mShapes.insert(mShapes.end(), tShape.begin(), tShape.end());
 

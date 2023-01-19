@@ -1,2 +1,2 @@
-F:\FlashBluePanda\porte\build\Release\porte.exe  F:\FlashBluePanda\porte\resources\scenes\bunny.xml
+%~dp0/../../build/Release/porte.exe bunny.xml
 
