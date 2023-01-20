@@ -2,7 +2,7 @@
 LookAt 0 0 5 0 0 0 0 1 0
 Camera "perspective" "float fov" [90]
 Film "image"  
-"integer xresolution" [700] "integer yresolution" [700]
+"integer xresolution" [2] "integer yresolution" [2]
     "string filename" "killeroo-simple.exr"
 
 Sampler "random" "integer pixelsamples" [4]

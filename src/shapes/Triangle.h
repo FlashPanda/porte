@@ -44,10 +44,10 @@ class Triangle : public Shape {
         v = &mesh->vertexIndices[3 * triNumber];
         faceIndex = mesh->faceIndices.size() ? mesh->faceIndices[triNumber] : 0;
 
-		LOG(WARNING) << "ObjectToWorld : " << *ObjectToWorld;
-		LOG(WARNING) << "WorldToObject : " << *WorldToObject;
-		LOG(WARNING) << "triNumber : " << triNumber;
-		LOG(WARNING) << "Triangle mesh : " << mesh->Output();
+		//LOG(WARNING) << "ObjectToWorld : " << *ObjectToWorld;
+		//LOG(WARNING) << "WorldToObject : " << *WorldToObject;
+		//LOG(WARNING) << "triNumber : " << triNumber;
+		//LOG(WARNING) << "Triangle mesh : " << mesh->Output();
     }
     Bounds3f ObjectBound() const;
     Bounds3f WorldBound() const;

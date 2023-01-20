@@ -756,6 +756,20 @@ namespace porte
 				}
 				Float values[3] = {color.x, color.y, color.z};
 
+				// 从sample得到RGB
+				int nItems = 3;
+				if ((nItems % 2) != 0) {
+					nItems -= nItems % 2;
+				}
+				nItems /= 2;
+				std::unique_ptr<Float[]> wl(new Float[nItems]);
+				std::unique_ptr<Float[]> v(new Float[nItems]);
+				for (int i = 0; i < nItems; ++i) {
+					wl[i] = values[2 * i];
+					v[i] = values[2 * i + 1];
+				}
+				RGBSpectrum s = RGBSpectrum::FromSampled(wl.get(), v.get(), nItems);
+
 				// 强度
 				float intensity = 1.f;
 				pugi::xml_attribute intensityAttr = node.attribute("intensity");
@@ -764,7 +778,7 @@ namespace porte
 					intensity = intensityAttr.as_float(1.f);
 				}
 
-				Spectrum s = RGBSpectrum::FromRGB(values);
+				
 				s *= intensity;
 
 				mLights.push_back(CreatePointLight(Translate(pos), s));

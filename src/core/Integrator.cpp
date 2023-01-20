@@ -107,8 +107,8 @@ void SamplerIntegrator::Render(const Scene &scene) {
                           //  (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
                     }
-                    //VLOG(1) << "Camera sample: " << cameraSample << " -> ray: " <<
-                    //    ray << " -> L = " << L;
+					LOG(INFO) << "Camera sample: " << cameraSample << " -> ray: " <<
+						ray << " -> L = " << L;
 
                     // 增加相机的射线贡献到图像中
                     filmTile->AddSample(cameraSample.pFilm, L, rayWeight);

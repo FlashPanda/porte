@@ -14,9 +14,6 @@ set_property(TARGET pugixml PROPERTY FOLDER "dependencies")
 # glog
 SET(WITH_GFLAGS OFF CACHE BOOL "Use gflags")
 SET(BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
-IF(WIN32)
-  ADD_DEFINITIONS( -D GOOGLE_GLOG_DLL_DECL= )
-ENDIF()
 ADD_SUBDIRECTORY(glog)
 SET_PROPERTY(TARGET glog logging_unittest demangle_unittest utilities_unittest stl_logging_unittest PROPERTY FOLDER "dependencies")
 INCLUDE_DIRECTORIES (
