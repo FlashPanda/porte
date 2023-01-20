@@ -528,39 +528,36 @@ namespace porte
 			}
 
 			// normals 不允许没有法线
-			pugi::xml_node normalsNode = node.child("normals");
-			if (normalsNode.empty())
-			{
-				std::cout << "triangle mesh has no normals child node! " << std::endl;
-				return;
-			}
-
-			pugi::xml_attribute normalsAttr = normalsNode.attribute("value");
-			if (normalsAttr.empty())
-			{
-				std::cout << "triangle mesh has no normals attr value! " << std::endl;
-				return;
-			}
-
 			std::vector<Normal3f> normals;
+			pugi::xml_node normalsNode = node.child("normals");
+			if (!normalsNode.empty())
 			{
-				std::string str(normalsAttr.as_string());
-				std::vector<std::string> tokens = Split(str, " ");
-				
-				if (tokens.size() / 3 != points.size())
+				pugi::xml_attribute normalsAttr = normalsNode.attribute("value");
+				if (normalsAttr.empty())
 				{
-					std::cout << "normals count is not the same as points count!" << std::endl;
+					std::cout << "triangle mesh has no normals attr value! " << std::endl;
 					return;
 				}
 
-				int nNormals = tokens.size() / 3;
-				for (int i = 0; i < nNormals; ++i)
 				{
-					Normal3f normal;
-					normal[0] = std::atof(tokens[i * 3 + 0].c_str());
-					normal[1] = std::atof(tokens[i * 3 + 1].c_str());
-					normal[2] = std::atof(tokens[i * 3 + 2].c_str());
-					normals.push_back(std::move(normal));
+					std::string str(normalsAttr.as_string());
+					std::vector<std::string> tokens = Split(str, " ");
+
+					if (tokens.size() / 3 != points.size())
+					{
+						std::cout << "normals count is not the same as points count!" << std::endl;
+						return;
+					}
+
+					int nNormals = tokens.size() / 3;
+					for (int i = 0; i < nNormals; ++i)
+					{
+						Normal3f normal;
+						normal[0] = std::atof(tokens[i * 3 + 0].c_str());
+						normal[1] = std::atof(tokens[i * 3 + 1].c_str());
+						normal[2] = std::atof(tokens[i * 3 + 2].c_str());
+						normals.push_back(std::move(normal));
+					}
 				}
 			}
 

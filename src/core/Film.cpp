@@ -4,6 +4,7 @@
 //#include "imageio.h"
 //#include "stats.h"
 
+
 namespace porte {
 
 //STAT_MEMORY_COUNTER("Memory/Film pixels", filmPixelMemory);
@@ -135,8 +136,9 @@ void Film::AddSplat(const Point2f &p, Spectrum v) {
 void Film::WriteImage(std::string filename, Float splatScale)
 {
     // 把图片转换成RGB，计算最终的像素值
-    //LOG(INFO) <<
-    //    "Converting image to RGB and computing final weighted pixel values";
+    LOG(INFO) <<
+        "Converting image to RGB and computing final weighted pixel values";
+
     std::unique_ptr<Float[]> rgb(new Float[3 * croppedPixelBounds.Area()]);
     int offset = 0;
     for (Point2i p : croppedPixelBounds) {
@@ -172,8 +174,8 @@ void Film::WriteImage(std::string filename, Float splatScale)
     }
 
     
-    //LOG(INFO) << "Writing image " << filename << " with bounds " <<
-    //    croppedPixelBounds;
+	LOG(INFO) << "Writing image \"" << filename << "\" with bounds " <<
+		croppedPixelBounds;
     //pbrt::WriteImage(filename, &rgb[0], croppedPixelBounds, fullResolution);
 
 	// 8-bit formats; apply gamma

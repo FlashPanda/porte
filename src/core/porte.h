@@ -23,7 +23,12 @@
 #endif
 #include <assert.h>
 #include <string.h>
-//#include <glog/logging.h>
+
+#define GOOGLE_GLOG_DLL_DECL
+#ifndef GLOG_NO_ABBREVIATED_SEVERITIES
+    #define GLOG_NO_ABBREVIATED_SEVERITIES
+#endif
+#include <glog/logging.h>
 
 // 平台指定
 #if defined(_WIN32) || defined(_WIN64)

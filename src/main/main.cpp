@@ -5,6 +5,9 @@
 
 int main(int argc, char* argv[])
 {
+	google::InitGoogleLogging(argv[0]);
+	FLAGS_stderrthreshold = 1; // Warning and above.
+
 	if (argc < 2)
 	{
 		std::cout << "command parameters error, please set scene file!" << std::endl;

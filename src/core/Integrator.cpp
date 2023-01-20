@@ -65,10 +65,6 @@ void SamplerIntegrator::Render(const Scene &scene) {
                     tileSampler->StartPixel(pixel);
                 //}
 
-                // Do this check after the StartPixel() call; this keeps
-                // the usage of RNG values from (most) Samplers that use
-                // RNGs consistent, which improves reproducability /
-                // debugging.
                 if (!InsideExclusive(pixel, pixelBounds))
                     continue;
 

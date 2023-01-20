@@ -52,6 +52,63 @@ TriangleMesh::TriangleMesh(
         faceIndices = std::vector<int>(fIndices, fIndices + nTriangles);
 }
 
+std::string TriangleMesh::Output()
+{
+	//const int nTriangles, nVertices;
+	 //std::vector<int> vertexIndices;
+	 //std::unique_ptr<Point3f[]> p;
+	 //std::unique_ptr<Normal3f[]> n;
+	 //std::unique_ptr<Vector3f[]> s;
+	 //std::unique_ptr<Point2f[]> uv;
+	 //std::shared_ptr<Texture<Float>> alphaMask, shadowAlphaMask;
+	 //std::vector<int> faceIndices;
+	std::stringstream ss;
+	ss << "nTriangles : " << nTriangles << std::endl;
+	ss << "nVertices : " << nVertices << std::endl;
+	ss << "vertexIndices : " << std::endl;
+	for (int i = 0; i < vertexIndices.size(); ++i) {
+		ss << vertexIndices[i] << " ";
+	}
+	ss << std::endl;
+	ss << "p : " << std::endl;
+	for (int i = 0; i < nVertices; ++i)
+	{
+		ss << p[i] << " ";
+	}
+	ss << std::endl;
+	ss << "n : " << std::endl;
+	if (n) {
+		for (int i = 0; i < nVertices; ++i) {
+			ss << n[i] << " ";
+		}
+		ss << std::endl;
+	}
+
+	ss << "s : " << std::endl;
+	if (s) {
+		for (int i = 0; i < nVertices; ++i) {
+			ss << s[i] << " ";
+		}
+		ss << std::endl;
+	}
+
+	ss << "uv : " << std::endl;
+	if (uv) {
+		for (int i = 0; i < nVertices; ++i) {
+			ss << uv[i] << " ";
+		}
+		ss << std::endl;
+	}
+
+	ss << "faceindices : " << std::endl;
+	for (int i = 0; i < faceIndices.size(); ++i) {
+		ss << faceIndices[i] << " ";
+	}
+	ss << std::endl;
+
+	return ss.str();
+}
+
 std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     const Transform *ObjectToWorld, const Transform *WorldToObject,
     bool reverseOrientation, int nTriangles, const int *vertexIndices,
@@ -537,7 +594,6 @@ Float Triangle::SolidAngle(const Point3f &p, int nSamples) const {
 
 //std::vector<std::shared_ptr<Shape>> CreateTriangleMeshShape(
 //    const Transform *o2w, const Transform *w2o, bool reverseOrientation,
-//    const ParamSet &params,
 //    std::map<std::string, std::shared_ptr<Texture<Float>>> *floatTextures) 
 //{
 //    int nvi, npi, nuvi, nsi, nni;

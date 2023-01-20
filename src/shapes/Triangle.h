@@ -23,6 +23,8 @@ struct TriangleMesh {
                  const std::shared_ptr<Texture<Float>> &shadowAlphaMask,
                  const int *faceIndices);
 
+    std::string Output();
+
     const int nTriangles, nVertices;
     std::vector<int> vertexIndices;
     std::unique_ptr<Point3f[]> p;
@@ -40,8 +42,12 @@ class Triangle : public Shape {
              int triNumber)
         : Shape(ObjectToWorld, WorldToObject, reverseOrientation), mesh(mesh) {
         v = &mesh->vertexIndices[3 * triNumber];
-        //triMeshBytes += sizeof(*this);
         faceIndex = mesh->faceIndices.size() ? mesh->faceIndices[triNumber] : 0;
+
+		LOG(WARNING) << "ObjectToWorld : " << *ObjectToWorld;
+		LOG(WARNING) << "WorldToObject : " << *WorldToObject;
+		LOG(WARNING) << "triNumber : " << triNumber;
+		LOG(WARNING) << "Triangle mesh : " << mesh->Output();
     }
     Bounds3f ObjectBound() const;
     Bounds3f WorldBound() const;
@@ -81,11 +87,11 @@ std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     const std::shared_ptr<Texture<Float>> &alphaTexture,
     const std::shared_ptr<Texture<Float>> &shadowAlphaTexture,
     const int *faceIndices = nullptr);
+
 //std::vector<std::shared_ptr<Shape>> CreateTriangleMeshShape(
-//    const Transform *o2w, const Transform *w2o, bool reverseOrientation,
-//    const ParamSet &params,
-//    std::map<std::string, std::shared_ptr<Texture<Float>>> *floatTextures =
-//        nullptr);
+//	const Transform* o2w, const Transform* w2o, bool reverseOrientation,
+//	std::map<std::string, std::shared_ptr<Texture<Float>>>* floatTextures =
+//	nullptr);
 
 }  // namespace porte
 

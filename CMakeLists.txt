@@ -19,7 +19,7 @@ include_directories(ext/pugixml/src)
 include_directories(ext)
 include_directories (
   ext/glog/src
-  #${CMAKE_BINARY_DIR}/src/ext/glog
+  ${CMAKE_BINARY_DIR}/ext/glog
 )
 
 FILE (GLOB PORTE_SOURCE
@@ -56,6 +56,7 @@ add_library(porte STATIC
 set (ALL_PORTE_LIBS
 	porte
 	pugixml
+	glog
 )
 
 add_executable(porte_exe src/main/main.cpp)

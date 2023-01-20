@@ -12,7 +12,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-namespace pbrt {
+namespace porte {
 
 inline void stringPrintfRecursive(std::string *s, const char *fmt) {
     const char *c = fmt;
