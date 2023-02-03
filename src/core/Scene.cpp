@@ -15,6 +15,7 @@
 #include <shapes/Triangle.h>
 #include <core/Primitive.h>
 #include <accelerators/BVH.h>
+#include <integrators/Path.h>
 
 namespace porte
 {
@@ -184,6 +185,10 @@ namespace porte
 			else if (std::string(attr.value()) == "whitted")
 			{
 				mIntegrator = CreateWhittedIntegrator(mSampler, mCamera);
+			}
+			else if (std::string(attr.value()) == "path")
+			{
+				mIntegrator = CreatePathIntegrator(mSampler, mCamera);
 			}
 			else
 			{

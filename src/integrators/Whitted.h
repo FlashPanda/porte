@@ -1,4 +1,11 @@
+#if defined(_MSC_VER)
+#define NOMINMAX
 #pragma once
+#endif
+
+#ifndef PORTE_INTEGRATORS_WHITTED_H
+#define PORTE_INTEGRATORS_WHITTED_H
+
 #include <core/porte.h>
 #include <core/Integrator.h>
 #include <memory>
@@ -12,8 +19,6 @@ namespace porte
 			std::shared_ptr<Sampler> sampler,
 			const Bounds2i& pixelBounds)
 			: SamplerIntegrator(camera, sampler, pixelBounds) {}
-		//Spectrum Li(const Ray& ray, const Scene& scene,
-		//	Sampler& sampler, MemoryArena& arena, int depth = 0) const;
 		Spectrum Li(const RayDifferential& ray, const Scene& scene,
 			Sampler& sampler, MemoryArena& arena,
 			int depth = 0) const;
@@ -22,3 +27,4 @@ namespace porte
 	WhittedIntegrator* CreateWhittedIntegrator(std::shared_ptr<Sampler> sampler,
 		std::shared_ptr<const Camera> camera);
 }
+#endif

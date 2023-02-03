@@ -14,6 +14,10 @@
 #include <core/Interaction.h>
 #include <core/Reflection.h>
 #include <core/Sampler.h>
+#include <core/Scene.h>
+#include <core/Sampling.h>
+#include <core/Light.h>
+#include <core/Primitive.h>
 
 namespace porte {
 
@@ -21,6 +25,180 @@ namespace porte {
 
 Integrator::~Integrator() {}
 
+Spectrum UniformSampleAllLights(const Interaction& it, const Scene& scene,
+    MemoryArena& arena, Sampler& sampler,
+    const std::vector<int>& nLightSamples,
+    bool handleMedia)
+{
+    Spectrum L(0.f);
+    for (size_t i = 0; i < scene.mLights.size(); ++i)
+    {
+        // 累加第i个光源到L
+        const std::shared_ptr<Light>& light = scene.mLights[i];
+        int nSamples = nLightSamples[i];
+        const Point2f* uLightArray = sampler.Get2DArray(nSamples);
+        const Point2f* uScatteringArray = sampler.Get2DArray(nSamples);
+        if (!uLightArray || !uScatteringArray)
+        {
+            // 从光源处采一个样本
+            Point2f uLight = sampler.Get2D();
+            Point2f uScattering = sampler.Get2D();
+            L += EstimateDirect(it, uScattering, *light, uLight, scene, sampler, arena, handleMedia);
+        }
+        else
+        {
+            // 用样本数组估算直接光照
+            Spectrum Ld(0.f);
+            for (int j = 0; j < nSamples; ++j)
+                Ld += EstimateDirect(it, uScatteringArray[j], *light,
+                    uLightArray[j], scene, sampler, arena, handleMedia);
+            L += Ld / nSamples;
+        }
+    }
+
+    return L;
+}
+
+Spectrum UniformSampleOneLight(const Interaction& it, const Scene& scene,
+    MemoryArena& arena, Sampler& sampler,
+    bool handleMedia,
+    const Distribution1D* lightDisturb)
+{
+    int nLights = int(scene.mLights.size());
+    if (nLights == 0) return Spectrum(0.f);
+    int lightNum;
+    Float lightPdf;
+    if (lightDisturb)
+    {
+        lightNum = lightDisturb->SampleDiscrete(sampler.Get1D(), &lightPdf);
+        if (lightPdf == 0) return Spectrum(0.f);
+    }
+    else
+    {
+        lightNum = std::min((int)(sampler.Get1D() * nLights), nLights - 1);
+        lightPdf = Float(1) / nLights;
+    }
+
+    const std::shared_ptr<Light>& light = scene.mLights[lightNum];
+    Point2f uLight = sampler.Get2D();
+    Point2f uScattering = sampler.Get2D();
+    return EstimateDirect(it, uScattering, *light, uLight,
+        scene, sampler, arena, handleMedia) / lightPdf;
+}
+
+Spectrum EstimateDirect(const Interaction& it, const Point2f& uScattering,
+    const Light& light, const Point2f& uLight,
+    const Scene& scene, Sampler& sampler,
+    MemoryArena& arena, bool handleMedia,
+    bool specular)
+{
+    BxDFType bsdfFlags = specular ? BSDF_ALL : BxDFType(BSDF_ALL & ~BSDF_SPECULAR);
+    Spectrum Ld(0.f);
+
+    // 使用MIS采样光源
+    Vector3f wi;
+    Float lightPdf = 0, scatteringPdf = 0;
+    VisibilityTester visibility;
+    // 光源照亮交点的spectrum值
+    Spectrum Li = light.Sample_Li(it, uLight, &wi, &lightPdf, &visibility);
+	VLOG(2) << "EstimateDirect uLight:" << uLight << " -> Li: " << Li << ", wi: "
+		<< wi << ", pdf: " << lightPdf;
+    if (lightPdf > 0 && !Li.IsBlack())
+    {
+        // 计算光源样本的BSDF或者相函数值
+        Spectrum f;
+        if (it.IsSurfaceInteraction())
+        {
+            // 计算此光源采样策略之下的BSDF
+            const SurfaceInteraction& isect = (const SurfaceInteraction&)it;
+            f = isect.bsdf->f(isect.wo, wi, bsdfFlags) * AbsDot(wi, isect.shading.n);
+            scatteringPdf = isect.bsdf->Pdf(isect.wo, wi, bsdfFlags);
+            VLOG(2) << "  surf f*dot :" << f << ", scatteringPdf: " << scatteringPdf;
+        }
+        else
+        {
+            // TODO: 相函数phase function
+        }
+
+        if (!f.IsBlack())
+        {
+            // 计算光源样本的visibility有效性
+            if (handleMedia) {
+                // todo: 处理介质
+            }
+            else {
+                if (!visibility.Unoccluded(scene)) {
+                    Li = Spectrum(0.f);
+                    VLOG(2) << "  shadow ray blocked";
+                }
+                else 
+                    VLOG(2) << "  shadow ray unoccluded";
+            }
+
+            // 添加光源贡献给反射radiance
+            if (!Li.IsBlack())
+            {
+                if (IsDeltaLight(light.flags))
+                    Ld += f * Li / lightPdf;
+                else {
+                    Float weight = PowerHeuristic(1, lightPdf, 1, scatteringPdf);
+                    Ld += f * Li * weight / lightPdf;
+                }
+            }
+        }
+    }
+
+    // 使用MIS采样BSDF
+    if (!IsDeltaLight(light.flags))
+    {
+        Spectrum f;
+        bool sampledSpecular = false;
+        if (it.IsSurfaceInteraction()){
+            // 采样散射方向
+            // 跟光源的对比，光源只是输入方向，然后求f。而这里需要采样f。
+            BxDFType sampledType;
+            const SurfaceInteraction& isect = (const SurfaceInteraction&)it;
+            f = isect.bsdf->Sample_f(isect.wo, &wi, uScattering, &scatteringPdf,
+                bsdfFlags, &sampledType);
+            f *= AbsDot(wi, isect.shading.n);
+            sampledSpecular = (sampledType & BSDF_SPECULAR) != 0;
+        } else {
+            // TODO: 散射方向
+        }
+		VLOG(2) << "  BSDF / phase sampling f: " << f << ", scatteringPdf: " <<
+			scatteringPdf;
+
+        if (!f.IsBlack() && scatteringPdf > 0){
+            // 计算采样方向wi上的光源贡献
+            Float weight = 1;
+            if (!sampledSpecular) {
+                lightPdf = light.Pdf_Li(it, wi);
+                if (lightPdf == 0) return Ld;
+                weight = PowerHeuristic(1, scatteringPdf, 1, lightPdf);
+            }
+
+            // 找到交点，计算投射度
+            SurfaceInteraction lightIsect;
+            Ray ray = it.SpawnRay(wi);
+            // TODO 如果要处理介质，需要调用IntersectTr
+            bool foundSurfaceInteraction = scene.Intersect(ray, &lightIsect);
+
+            // 累加光源贡献
+            Spectrum Li(0.f);
+            if (foundSurfaceInteraction) {
+                if (lightIsect.primitive->GetAreaLight() == &light)
+                    Li = lightIsect.Le(-wi);
+            }
+            else
+                Li = light.Le(ray);
+
+            if (!Li.IsBlack()) Ld += f * Li * weight / scatteringPdf;
+        }
+    }
+    //else 如果是delta light的话，根本没必要对BSDF采样了
+
+    return Ld;
+}
 
 void SamplerIntegrator::Render(const Scene &scene) {
     Preprocess(scene, *sampler);

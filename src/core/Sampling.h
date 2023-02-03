@@ -4,8 +4,8 @@
 #pragma once
 #endif
 
-#ifndef PBRT_CORE_SAMPLING_H
-#define PBRT_CORE_SAMPLING_H
+#ifndef PORTE_CORE_SAMPLING_H
+#define PORTE_CORE_SAMPLING_H
 
 // core/Sampling.h*
 #include <core/porte.h>

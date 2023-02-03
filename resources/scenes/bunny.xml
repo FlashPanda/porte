@@ -17,7 +17,7 @@
 	
 	<sampler type="random" sample_count="4" />
 
-    <integrator type="whitted" />
+    <integrator type="path" maxDepth="5"/>
 
 	<!-- material name="material1" type="plastic" Kd="0.8 0.8 0.8" Ks=".5 .5 .5" roughness="0.025"/ -->
 	<material name="default" type="matte" Kd="0.5 0.5 0.8" />

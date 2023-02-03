@@ -33,6 +33,7 @@ class Light {
     virtual ~Light();
     Light(int flags, const Transform &LightToWorld,
           int nSamples = 1);
+    // 这个采样其实就是从交点，到光源位置的一个方向。目标对象是交点。
     virtual Spectrum Sample_Li(const Interaction &ref, const Point2f &u,
                                Vector3f *wi, Float *pdf,
                                VisibilityTester *vis) const = 0;
@@ -40,6 +41,7 @@ class Light {
     virtual void Preprocess(const Scene &scene) {}
     virtual Spectrum Le(const RayDifferential &r) const;
     virtual Float Pdf_Li(const Interaction &ref, const Vector3f &wi) const = 0;
+    // 这个采样的对象就是光源自己。是自己发出的光，载光路径的采样。
     virtual Spectrum Sample_Le(const Point2f &u1, const Point2f &u2, Float time,
                                Ray *ray, Normal3f *nLight, Float *pdfPos,
                                Float *pdfDir) const = 0;
