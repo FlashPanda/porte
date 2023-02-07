@@ -212,24 +212,20 @@ void SamplerIntegrator::Render(const Scene &scene) {
                    (sampleExtent.y + tileSize - 1) / tileSize);
     //ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
     {
-        //ParallelFor2D([&](Point2i tile) {
-        for (int x = 0; x < nTiles.x; ++x)
-        {
-			for (int y = 0; y < nTiles.y; ++y)
-			{
+        ParallelFor2D([&](Point2i tile) {
 
             // 渲染图块
 
             MemoryArena arena;
 
             // 获取块的sampler实例
-            int seed = y * nTiles.x + x;
+            int seed = tile.y * nTiles.x + tile.x;
             std::unique_ptr<Sampler> tileSampler = sampler->Clone(seed);
 
             // Compute sample bounds for tile
-            int x0 = sampleBounds.pMin.x + x * tileSize;
+            int x0 = sampleBounds.pMin.x + tile.x * tileSize;
             int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
-            int y0 = sampleBounds.pMin.y + y * tileSize;
+            int y0 = sampleBounds.pMin.y + tile.y * tileSize;
             int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
             Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
             //LOG(INFO) << "Starting image tile " << tileBounds;
@@ -240,7 +236,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
             for (Point2i pixel : tileBounds) {
                 //{
                     //ProfilePhase pp(Prof::StartPixel);
-                    tileSampler->StartPixel(pixel);
+                tileSampler->StartPixel(pixel);
                 //}
 
                 if (!InsideExclusive(pixel, pixelBounds))
@@ -270,23 +266,25 @@ void SamplerIntegrator::Render(const Scene &scene) {
                         //    pixel.x, pixel.y,
                         //    (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
-                    } else if (L.y() < -1e-5) {
+                    }
+                    else if (L.y() < -1e-5) {
                         //LOG(ERROR) << StringPrintf(
                         //    "Negative luminance value, %f, returned "
                         //    "for pixel (%d, %d), sample %d. Setting to black.",
                         //    L.y(), pixel.x, pixel.y,
                         //    (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
-                    } else if (std::isinf(L.y())) {
-                          //LOG(ERROR) << StringPrintf(
-                          //  "Infinite luminance value returned "
-                          //  "for pixel (%d, %d), sample %d. Setting to black.",
-                          //  pixel.x, pixel.y,
-                          //  (int)tileSampler->CurrentSampleNumber());
+                    }
+                    else if (std::isinf(L.y())) {
+                        //LOG(ERROR) << StringPrintf(
+                        //  "Infinite luminance value returned "
+                        //  "for pixel (%d, %d), sample %d. Setting to black.",
+                        //  pixel.x, pixel.y,
+                        //  (int)tileSampler->CurrentSampleNumber());
                         L = Spectrum(0.f);
                     }
-					LOG(INFO) << "Camera sample: " << cameraSample << " -> ray: " <<
-						ray << " -> L = " << L;
+                    LOG(INFO) << "Camera sample: " << cameraSample << " -> ray: " <<
+                        ray << " -> L = " << L;
 
                     // 增加相机的射线贡献到图像中
                     filmTile->AddSample(cameraSample.pFilm, L, rayWeight);
@@ -300,8 +298,7 @@ void SamplerIntegrator::Render(const Scene &scene) {
             // 合并图像块
             camera->film->MergeFilmTile(std::move(filmTile));
             //reporter.Update();
-			}
-		}
+            },nTiles);
         //reporter.Done();
     }
     //LOG(INFO) << "Rendering finished";

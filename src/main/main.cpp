@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <core/Scene.h>
+#include <core/Parallel.h>
 
 int main(int argc, char* argv[])
 {
@@ -18,6 +19,10 @@ int main(int argc, char* argv[])
 	porte::Scene scene;		
 	
 	scene.LoadSceneFromFile(argv[1]);
+
+	porte::ParallelInit();
+
 	scene.Render();
+
 	return 0;
 }
